@@ -8,6 +8,7 @@
     --cyan: #00f0ff;
     --orange: #ff9000;
     --amber: #ffc259;
+    --error: #ff4d60;
     
     --font-display: 'Rubik', sans-serif;
     --font-body: 'Heebo', sans-serif;
@@ -181,12 +182,18 @@ input[type=range].slider-full::-webkit-slider-thumb:hover {
     border-radius: 10px;
     padding: 1rem 1.5rem;
     display: inline-flex; align-items: center; justify-content: center;
+    direction: ltr; unicode-bidi: isolate;
     box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
 }
 
-.ltr-container, .katex-display {
-    direction: ltr !important; 
-    unicode-bidi: isolate !important;
+/* LTR Math Fixes for RTL Hebrew */
+.math-inline, .katex, .tex, .ltr-container {
+    direction: ltr !important;
+    unicode-bidi: isolate;
+    display: inline-block;
+}
+.katex-display {
+    display: block !important;
 }
 
 /* ---------- Animations ---------- */
@@ -230,7 +237,7 @@ canvas {
 
 .dash-title {
     font-family: var(--font-mono); font-size: 0.95rem; color: var(--text);
-    padding: 0.5rem 1rem; background: rgba(0,0,0,0.3);
+    padding: 0.5rem 1rem; background: var(--bg-panel);
     border-bottom: 1px solid var(--line); text-align: left; direction: ltr;
 }
 .dash-canvas {

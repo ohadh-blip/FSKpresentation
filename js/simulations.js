@@ -640,7 +640,7 @@ let currentNoiseLevel = 0;
             if(k===f1) fCtx.fillStyle = '#ff9000';
             fCtx.fillRect(sx+k*bw+2, by-bh, bw-4, bh);
             fCtx.fillStyle = '#f8faff';
-            fCtx.font = '10px monospace';
+            fCtx.font = '10px JetBrains Mono';
             fCtx.fillText(k, sx+k*bw+bw/2 - 3, by+15);
         }
 

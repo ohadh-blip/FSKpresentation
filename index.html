@@ -91,7 +91,7 @@
                     </div>
                     <div class="content-col">
                         <p>אי אפשר לשדר את הביטים כמו שהם. אנחנו משתמשים באפנון <span class="highlight-cyan font-bold">FSK</span> (Frequency Shift Keying).</p>
-                        <p class="muted">ממירים כל '0' לתדר נמוך ($f_0 = 2\text{Hz}$) וכל '1' לתדר גבוה ($f_1 = 5\text{Hz}$).</p>
+                        <p class="muted">ממירים כל '0' לתדר נמוך (<span class="math-inline">$f_0 = 2\text{Hz}$</span>) וכל '1' לתדר גבוה (<span class="math-inline">$f_1 = 5\text{Hz}$</span>).</p>
                         <div class="eq-box mt-4 ltr-container">
                             $$x(t) = A \cos(2\pi f_i t + \phi_0)$$
                         </div>
@@ -116,7 +116,7 @@
                         <div class="eq-box mt-4 ltr-container">
                             $$y(t) = x(t) + n(t)$$
                         </div>
-                        <p class="mt-2 text-sm muted" dir="rtl">כאשר $n(t)$ הוא מודל רעש גאוסי לבן (AWGN).</p>
+                        <p class="mt-2 text-sm muted" dir="rtl">כאשר <span class="math-inline">$n(t)$</span> הוא מודל רעש גאוסי לבן (AWGN).</p>
                         <div class="panel mt-4">
                             <label class="slider-label">עוצמת רעש (Noise Level) <span id="noise-val" class="highlight-orange">0%</span></label>
                             <input type="range" id="slider-noise" min="0" max="100" value="0" class="slider-full">
@@ -146,7 +146,7 @@
                     </div>
                     <div class="content-col" style="flex: 1;">
                         <p>כאן נכנסים הכלים שלמדנו בקורס. אנו עוברים למישור התדר בעזרת <span class="highlight-cyan font-bold">התמרת פורייה בדידה</span>.</p>
-                        <p class="muted">הרעש הלבן מתפזר באופן אחיד על פני כל הספקטרום, אבל אנרגיית האות שלנו מתרכזת בדיוק בתדרים $f_0$ ו-$f_1$.</p>
+                        <p class="muted">הרעש הלבן מתפזר באופן אחיד על פני כל הספקטרום, אבל אנרגיית האות שלנו מתרכזת בדיוק בתדרים <span class="math-inline">$f_0$</span> ו-<span class="math-inline">$f_1$</span>.</p>
                         <div class="eq-box mt-4 text-sm ltr-container">
                             $$X[k] = \sum_{n=0}^{N-1} x[n] e^{-j 2\pi k n / N}$$
                         </div>
@@ -166,7 +166,7 @@
                 <div class="cols">
                     <div class="content-col">
                         <p>המקלט שלנו מתפקד כמערכת <span class="highlight-orange font-bold">LTI</span> (לינארית וקבועה בזמן).</p>
-                        <p class="muted">אנו מממשים שני מסנני העברת חגורה (Bandpass Filters) הממורכזים ב-$f_0$ ו-$f_1$. המסננים מנחיתים את הרעש בשאר התדרים ומוציאים החלטה איזו תדירות שודרה בכל חלון זמן.</p>
+                        <p class="muted">אנו מממשים שני מסנני העברת חגורה (Bandpass Filters) הממורכזים ב-<span class="math-inline">$f_0$</span> ו-<span class="math-inline">$f_1$</span>. המסננים מנחיתים את הרעש בשאר התדרים ומוציאים החלטה איזו תדירות שודרה בכל חלון זמן.</p>
                         <div class="eq-box mt-4 ltr-container">
                             $$|H_{BPF}(j\omega)|$$
                         </div>
