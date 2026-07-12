@@ -11,10 +11,7 @@ const smiley8x8 = [
     [0,0,1,1,1,1,0,0]
 ];
 
-// Flatten to 1D bitstream
 const bitstream = smiley8x8.flat();
-
-// FSK Settings
 const f0 = 2; // Hz (represents '0')
 const f1 = 5; // Hz (represents '1')
 const fs = 100; // sample rate for simulation logic
@@ -22,9 +19,7 @@ const bitDuration = 1.0; // seconds per bit
 const T = bitDuration;
 
 /* ================= Shared Utils ================= */
-function getDPR() {
-    return Math.min(window.devicePixelRatio || 1, 2);
-}
+function getDPR() { return Math.min(window.devicePixelRatio || 1, 2); }
 
 function resizeCanvas(canvas) {
     if (!canvas) return {w: 0, h: 0, ctx: null};
@@ -37,10 +32,12 @@ function resizeCanvas(canvas) {
     return { w: rect.width, h: rect.height, ctx };
 }
 
-// Simple Discrete Fourier Transform (Magnitude)
+// Pre-allocated array for FFT calculations to prevent memory leaks in the loop
+const MAX_FFT_N = 256;
+const fftMagnitudes = new Float32Array(MAX_FFT_N/2);
+
 function computeFFT(realInput) {
     const N = realInput.length;
-    const magnitudes = new Float32Array(N/2); // Only need positive half
     for (let k = 0; k < N/2; k++) {
         let re = 0;
         let im = 0;
@@ -49,12 +46,11 @@ function computeFFT(realInput) {
             re += realInput[n] * Math.cos(angle);
             im -= realInput[n] * Math.sin(angle);
         }
-        magnitudes[k] = Math.sqrt(re*re + im*im) / N;
+        fftMagnitudes[k] = Math.sqrt(re*re + im*im) / N;
     }
-    return magnitudes;
+    return fftMagnitudes;
 }
 
-// Generate AWGN sample
 function randn_bm() {
     let u = 0, v = 0;
     while(u === 0) u = Math.random(); 
@@ -62,20 +58,34 @@ function randn_bm() {
     return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
 }
 
+// Global Observer to pause animations when canvas is out of view
+function createVisibilityObserver(canvas, onVisible, onHidden) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) onVisible();
+            else onHidden();
+        });
+    }, { threshold: 0.1 });
+    observer.observe(canvas);
+    return observer;
+}
+
 /* ================= Global State for Syncing ================= */
 let globalTime = 0;
-let currentBitIndex = 0;
-let currentPhase = 0;
 let isTransmitting = false;
 
-/* ================= Ambient Background (Slide 0 / Body) ================= */
+/* ================= Slide 0: Ambient Background ================= */
 (function initAmbient() {
     const canvas = document.getElementById('bg-ambient');
     if (!canvas) return;
     let { w, h, ctx } = resizeCanvas(canvas);
     window.addEventListener('resize', () => { ({ w, h, ctx } = resizeCanvas(canvas)); });
 
+    let animId = null;
+    let isVisible = false;
+
     function draw(t) {
+        if (!isVisible) return;
         ctx.clearRect(0, 0, w, h);
         ctx.lineWidth = 1.5;
         const time = t * 0.001;
@@ -90,9 +100,13 @@ let isTransmitting = false;
             ctx.strokeStyle = i % 2 === 0 ? 'rgba(0, 240, 255, 0.1)' : 'rgba(255, 144, 0, 0.1)';
             ctx.stroke();
         }
-        requestAnimationFrame(draw);
+        animId = requestAnimationFrame(draw);
     }
-    requestAnimationFrame(draw);
+
+    createVisibilityObserver(canvas, 
+        () => { isVisible = true; if(!animId) animId = requestAnimationFrame(draw); },
+        () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
+    );
 })();
 
 /* ================= Slide 0: Title Animation ================= */
@@ -102,24 +116,30 @@ let isTransmitting = false;
     let { w, h, ctx } = resizeCanvas(canvas);
     window.addEventListener('resize', () => { ({ w, h, ctx } = resizeCanvas(canvas)); });
 
+    let animId = null;
+    let isVisible = false;
+
     function draw(t) {
+        if (!isVisible) return;
         ctx.clearRect(0, 0, w, h);
         const time = t * 0.002;
         
         ctx.lineWidth = 3;
         ctx.beginPath();
         for (let x = 0; x <= w; x += 5) {
-            // Mix of f0 and f1 frequencies visual
-            const env = Math.exp(-Math.pow((x - w/2)/(w/4), 2)); // Gaussian envelope
+            const env = Math.exp(-Math.pow((x - w/2)/(w/4), 2));
             const y = h/2 + (Math.sin(x*0.05 + time*f0) + 0.5*Math.sin(x*0.1 + time*f1)) * 40 * env;
             if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         ctx.strokeStyle = 'rgba(0, 240, 255, 0.8)';
         ctx.stroke();
-
-        requestAnimationFrame(draw);
+        animId = requestAnimationFrame(draw);
     }
-    requestAnimationFrame(draw);
+
+    createVisibilityObserver(canvas, 
+        () => { isVisible = true; if(!animId) animId = requestAnimationFrame(draw); },
+        () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
+    );
 })();
 
 /* ================= Slide 1: Baseband Unravel ================= */
@@ -132,37 +152,36 @@ let isTransmitting = false;
 
     let unraveling = false;
     let unravelProgress = 0; // 0 to 64
+    let animId = null;
+    let isVisible = false;
     
     btn.addEventListener('click', () => {
         unraveling = true;
         unravelProgress = 0;
-        isTransmitting = true; // start global transmission
+        isTransmitting = true; 
         globalTime = 0;
     });
 
     function draw(t) {
+        if (!isVisible) return;
         ctx.clearRect(0, 0, w, h);
         
         const cellSize = Math.min(w, h) * 0.08;
         const gridX = w * 0.1;
         const gridY = h / 2 - (4 * cellSize);
         
-        // Draw 8x8 Grid
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const bitIdx = r * 8 + c;
-                
                 let px = gridX + c * cellSize;
                 let py = gridY + r * cellSize;
                 let alpha = 1;
 
                 if (unraveling) {
                     if (bitIdx < unravelProgress) {
-                        // Flown away
                         alpha = 0;
                     } else if (bitIdx === Math.floor(unravelProgress)) {
-                        // Flying
-                        const tFlying = unravelProgress - bitIdx; // 0 to 1
+                        const tFlying = unravelProgress - bitIdx;
                         px += tFlying * (w * 0.5);
                         py += tFlying * (h/2 - py);
                         alpha = 1 - tFlying;
@@ -178,7 +197,6 @@ let isTransmitting = false;
             }
         }
 
-        // Draw Stream Line
         ctx.strokeStyle = '#a8b2d1';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -186,9 +204,8 @@ let isTransmitting = false;
         ctx.lineTo(w*0.9, h/2);
         ctx.stroke();
 
-        // Draw flowing bits
         if (unraveling) {
-            unravelProgress += 0.05; // speed
+            unravelProgress += 0.05;
             if (unravelProgress > 64) unravelProgress = 64;
 
             ctx.font = '20px JetBrains Mono';
@@ -196,17 +213,19 @@ let isTransmitting = false;
             ctx.textAlign = 'center';
             for (let i = 0; i < Math.floor(unravelProgress); i++) {
                 const bit = bitstream[i];
-                // Move bits to the right
                 let bitX = w*0.9 - ((unravelProgress - i) * 30);
                 if (bitX > w*0.3) {
                     ctx.fillText(bit.toString(), bitX, h/2 - 10);
                 }
             }
         }
-
-        requestAnimationFrame(draw);
+        animId = requestAnimationFrame(draw);
     }
-    requestAnimationFrame(draw);
+
+    createVisibilityObserver(canvas, 
+        () => { isVisible = true; if(!animId) animId = requestAnimationFrame(draw); },
+        () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
+    );
 })();
 
 /* ================= Slide 2: FSK Time Domain ================= */
@@ -216,7 +235,11 @@ let isTransmitting = false;
     let { w, h, ctx } = resizeCanvas(canvas);
     window.addEventListener('resize', () => { ({ w, h, ctx } = resizeCanvas(canvas)); });
 
+    let animId = null;
+    let isVisible = false;
+
     function draw(t) {
+        if (!isVisible) return;
         ctx.clearRect(0, 0, w, h);
         
         if (!isTransmitting) {
@@ -224,16 +247,13 @@ let isTransmitting = false;
             ctx.font = '16px Heebo';
             ctx.textAlign = 'center';
             ctx.fillText("לחץ 'שלח מידע' בשקופית הקודמת כדי להתחיל", w/2, h/2);
-            requestAnimationFrame(draw);
+            animId = requestAnimationFrame(draw);
             return;
         }
 
-        const time = t * 0.001; // real seconds
+        const time = t * 0.001; 
         const currentBitFrame = Math.floor(time / bitDuration) % 64;
-        const currentBit = bitstream[currentBitFrame];
-        const currentFreq = currentBit === 1 ? f1 : f0;
 
-        // Top: Bitstream indicator
         ctx.fillStyle = '#f8faff';
         ctx.font = '24px JetBrains Mono';
         ctx.textAlign = 'center';
@@ -249,11 +269,9 @@ let isTransmitting = false;
         }
         ctx.globalAlpha = 1.0;
         
-        // Highlighter for active bit
         ctx.strokeStyle = '#ff9000';
         ctx.strokeRect(w/2 - 15, h*0.2 - 25, 30, 35);
 
-        // Bottom: FSK Wave
         const waveY = h * 0.7;
         const waveAmp = h * 0.2;
         
@@ -261,7 +279,6 @@ let isTransmitting = false;
         ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 3;
 
-        // Draw last 2 seconds of history
         const historySeconds = 2.0;
         for (let px = 0; px <= w; px++) {
             const tOffset = (px / w) * historySeconds;
@@ -271,12 +288,10 @@ let isTransmitting = false;
                 continue;
             }
 
-            // Calculate phase by integrating frequency
             const bIdx = Math.floor(evalTime / bitDuration) % 64;
             const bTime = evalTime % bitDuration;
             const bFreq = bitstream[bIdx] === 1 ? f1 : f0;
             
-            // To maintain continuous phase, we must know the exact phase at the start of the bit
             let phaseAcc = 0;
             for(let j=0; j<bIdx; j++) {
                 phaseAcc += 2 * Math.PI * (bitstream[j] === 1 ? f1 : f0) * bitDuration;
@@ -288,9 +303,13 @@ let isTransmitting = false;
         }
         ctx.stroke();
 
-        requestAnimationFrame(draw);
+        animId = requestAnimationFrame(draw);
     }
-    requestAnimationFrame(draw);
+
+    createVisibilityObserver(canvas, 
+        () => { isVisible = true; if(!animId) animId = requestAnimationFrame(draw); },
+        () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
+    );
 })();
 
 /* ================= Slide 3: AWGN Noise ================= */
@@ -306,7 +325,6 @@ let currentNoiseLevel = 0;
     slider.addEventListener('input', (e) => {
         currentNoiseLevel = parseInt(e.target.value);
         noiseVal.textContent = currentNoiseLevel + '%';
-        // Also update dashboard slider if present
         const dashSlider = document.getElementById('dash-slider-noise');
         if(dashSlider && dashSlider.value != currentNoiseLevel) {
             dashSlider.value = currentNoiseLevel;
@@ -314,10 +332,14 @@ let currentNoiseLevel = 0;
         }
     });
 
+    let animId = null;
+    let isVisible = false;
+
     function draw(t) {
+        if (!isVisible) return;
         ctx.clearRect(0, 0, w, h);
         if (!isTransmitting) {
-            requestAnimationFrame(draw);
+            animId = requestAnimationFrame(draw);
             return;
         }
 
@@ -329,8 +351,8 @@ let currentNoiseLevel = 0;
         ctx.strokeStyle = '#ff9000';
         ctx.lineWidth = 2;
 
-        const historySeconds = 1.0; // Show less history for noise details
-        for (let px = 0; px <= w; px+=2) { // step by 2 for performance
+        const historySeconds = 1.0; 
+        for (let px = 0; px <= w; px+=2) {
             const tOffset = (px / w) * historySeconds;
             const evalTime = time - historySeconds + tOffset;
             if (evalTime < 0) {
@@ -347,16 +369,20 @@ let currentNoiseLevel = 0;
             phaseAcc += 2 * Math.PI * bFreq * bTime;
 
             const signal = Math.cos(phaseAcc);
-            const noise = (currentNoiseLevel / 100) * 2.0 * randn_bm(); // Max noise amp is 2x signal
+            const noise = (currentNoiseLevel / 100) * 2.0 * randn_bm(); 
             
             const y = waveY - waveAmp * (signal + noise);
             if (px === 0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
         }
         ctx.stroke();
 
-        requestAnimationFrame(draw);
+        animId = requestAnimationFrame(draw);
     }
-    requestAnimationFrame(draw);
+
+    createVisibilityObserver(canvas, 
+        () => { isVisible = true; if(!animId) animId = requestAnimationFrame(draw); },
+        () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
+    );
 })();
 
 /* ================= Slide 4: FFT ================= */
@@ -366,19 +392,23 @@ let currentNoiseLevel = 0;
     let { w, h, ctx } = resizeCanvas(canvas);
     window.addEventListener('resize', () => { ({ w, h, ctx } = resizeCanvas(canvas)); });
 
+    let animId = null;
+    let isVisible = false;
+    
+    // [PERF FIX] Hoist allocation out of the 60FPS loop
+    const N = 256;
+    const buffer = new Float32Array(N);
+
     function draw(t) {
+        if (!isVisible) return;
         ctx.clearRect(0, 0, w, h);
         if (!isTransmitting) {
-            requestAnimationFrame(draw);
+            animId = requestAnimationFrame(draw);
             return;
         }
 
         const time = t * 0.001;
-        
-        // Generate buffer for FFT (current bit window)
-        const N = 256;
         const dt = bitDuration / N;
-        const buffer = new Float32Array(N);
         const bIdx = Math.floor(time / bitDuration) % 64;
         const bFreq = bitstream[bIdx] === 1 ? f1 : f0;
         
@@ -388,18 +418,13 @@ let currentNoiseLevel = 0;
             buffer[i] = signal + noise;
         }
 
-        // Compute FFT
         const mags = computeFFT(buffer);
         
-        // Draw FFT
-        const maxFreqToShow = 10; // Hz
-        const freqBins = Math.floor((maxFreqToShow * bitDuration)); 
-        
+        const maxFreqToShow = 10;
         const barWidth = (w * 0.8) / maxFreqToShow;
         const startX = w * 0.1;
         const baseY = h * 0.8;
 
-        // Draw axes
         ctx.strokeStyle = '#233554';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -407,35 +432,34 @@ let currentNoiseLevel = 0;
         ctx.lineTo(w*0.9, baseY);
         ctx.stroke();
 
-        // Draw Bars
         for (let k = 0; k < maxFreqToShow; k++) {
             const mag = mags[k] || 0;
-            const barH = mag * (h * 1.5); // scale
-            
+            const barH = mag * (h * 1.5);
             const px = startX + k * barWidth;
             
-            // Color based on f0 or f1
             ctx.fillStyle = '#a8b2d1';
-            if (k === f0) ctx.fillStyle = 'rgba(0, 240, 255, 0.8)';
-            if (k === f1) ctx.fillStyle = 'rgba(255, 144, 0, 0.8)';
+            if (k === f0) ctx.fillStyle = '#00f0ff';
+            if (k === f1) ctx.fillStyle = '#ff9000';
 
             ctx.fillRect(px + 4, baseY - barH, barWidth - 8, barH);
             
-            // label
             ctx.fillStyle = '#f8faff';
             ctx.font = '14px JetBrains Mono';
             ctx.textAlign = 'center';
             ctx.fillText(k + 'Hz', px + barWidth/2, baseY + 20);
         }
 
-        // Active indicator
         ctx.fillStyle = '#f8faff';
         ctx.font = '20px Heebo';
         ctx.fillText(`Bit נוכחי מקורי: ${bitstream[bIdx]}`, w/2, h*0.2);
 
-        requestAnimationFrame(draw);
+        animId = requestAnimationFrame(draw);
     }
-    requestAnimationFrame(draw);
+
+    createVisibilityObserver(canvas, 
+        () => { isVisible = true; if(!animId) animId = requestAnimationFrame(draw); },
+        () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
+    );
 })();
 
 /* ================= Slide 5: Reconstruction ================= */
@@ -448,18 +472,19 @@ let currentNoiseLevel = 0;
 
     let isDecoding = false;
     let decodedBits = new Array(64).fill(null);
-    let decodeTimeStart = 0;
+    let animId = null;
+    let isVisible = false;
 
     btn.addEventListener('click', () => {
         isDecoding = true;
         decodedBits.fill(null);
-        decodeTimeStart = globalTime;
     });
 
     function draw(t) {
+        if (!isVisible) return;
         ctx.clearRect(0, 0, w, h);
         if (!isTransmitting) {
-            requestAnimationFrame(draw);
+            animId = requestAnimationFrame(draw);
             return;
         }
 
@@ -467,19 +492,14 @@ let currentNoiseLevel = 0;
         const bIdx = Math.floor(time / bitDuration) % 64;
 
         if (isDecoding) {
-            // Simulate detection logic (FFT Peak finding)
-            // Add real simulated noise impact here based on slider
             const errorProb = currentNoiseLevel > 80 ? 0.2 : (currentNoiseLevel > 50 ? 0.05 : 0);
-            
             if (decodedBits[bIdx] === null) {
-                // Determine bit
                 const actual = bitstream[bIdx];
                 const detected = Math.random() < errorProb ? (actual === 1 ? 0 : 1) : actual;
                 decodedBits[bIdx] = detected;
             }
         }
 
-        // Draw Reconstructed Grid
         const cellSize = Math.min(w, h) * 0.08;
         const gridX = w/2 - (4 * cellSize);
         const gridY = h/2 - (4 * cellSize);
@@ -495,13 +515,11 @@ let currentNoiseLevel = 0;
                 ctx.strokeRect(px, py, cellSize, cellSize);
 
                 if (decodedBits[idx] !== null) {
-                    // Check for error
                     const isError = decodedBits[idx] !== bitstream[idx];
                     ctx.fillStyle = decodedBits[idx] === 1 ? (isError ? '#ff4d60' : '#00f0ff') : 'transparent';
                     if (decodedBits[idx] === 1) {
                         ctx.fillRect(px+1, py+1, cellSize-2, cellSize-2);
                     } else if (isError) {
-                        // it was 1 but decoded as 0
                         ctx.fillStyle = '#ff4d60';
                         ctx.fillRect(px+1, py+1, cellSize-2, cellSize-2);
                     }
@@ -523,9 +541,13 @@ let currentNoiseLevel = 0;
              ctx.fillText("לחץ 'התחל פענוח'", w/2, h*0.1);
         }
 
-        requestAnimationFrame(draw);
+        animId = requestAnimationFrame(draw);
     }
-    requestAnimationFrame(draw);
+
+    createVisibilityObserver(canvas, 
+        () => { isVisible = true; if(!animId) animId = requestAnimationFrame(draw); },
+        () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
+    );
 })();
 
 /* ================= Slide 6: Dashboard Finale ================= */
@@ -535,8 +557,9 @@ let currentNoiseLevel = 0;
     const cFFT = document.getElementById('dash-fft');
     const cRX = document.getElementById('dash-rx');
     const dSlider = document.getElementById('dash-slider-noise');
+    const btnStart = document.getElementById('btn-dash-start');
     
-    if (!cTX || !cTime || !cFFT || !cRX) return;
+    if (!cTX || !cTime || !cFFT || !cRX || !btnStart) return;
     
     let tCtx, tmCtx, fCtx, rCtx;
     let tW, tH, tmW, tmH, fW, fH, rW, rH;
@@ -553,7 +576,6 @@ let currentNoiseLevel = 0;
     dSlider.addEventListener('input', (e) => {
         currentNoiseLevel = parseInt(e.target.value);
         document.getElementById('dash-noise-val').textContent = currentNoiseLevel + '%';
-        // sync back
         const s3 = document.getElementById('slider-noise');
         if(s3 && s3.value != currentNoiseLevel) {
             s3.value = currentNoiseLevel;
@@ -562,117 +584,124 @@ let currentNoiseLevel = 0;
     });
 
     let rxBits = new Array(64).fill(null);
+    let animId = null;
+    let dashBitIndex = 0;
+    let lastStepTime = 0;
+    const STEP_MS = 100;
+    let isVisible = false;
 
-    function draw(t) {
-        if (!isTransmitting) {
-            requestAnimationFrame(draw);
+    btnStart.addEventListener('click', () => {
+        if (animId) cancelAnimationFrame(animId);
+        btnStart.disabled = true;
+        btnStart.textContent = "סימולציה פועלת...";
+        
+        dashBitIndex = 0;
+        rxBits.fill(null);
+        lastStepTime = performance.now();
+        animId = requestAnimationFrame(dashLoop);
+    });
+
+    function dashLoop(t) {
+        if (!isVisible) {
+            // If the user navigates away, we pause without losing state.
+            animId = requestAnimationFrame(dashLoop);
             return;
         }
 
-        const time = t * 0.001;
-        const bIdx = Math.floor(time / bitDuration) % 64;
-        const bTime = time % bitDuration;
-        const bFreq = bitstream[bIdx] === 1 ? f1 : f0;
-
-        // 1. TX
-        tCtx.clearRect(0,0,tW,tH);
-        const cs = Math.min(tW, tH) * 0.1;
-        const ox = tW/2 - 4*cs;
-        const oy = tH/2 - 4*cs + 10;
-        for (let r=0; r<8; r++) {
-            for (let c=0; c<8; c++) {
-                const idx = r*8+c;
-                tCtx.fillStyle = smiley8x8[r][c] ? '#00f0ff' : '#233554';
-                if (idx === bIdx) tCtx.fillStyle = '#ff9000'; // highlight active
-                tCtx.fillRect(ox+c*cs, oy+r*cs, cs-1, cs-1);
-            }
+        if (dashBitIndex >= 64) {
+            btnStart.disabled = false;
+            btnStart.textContent = "התחל סימולציה (Start Demo)";
+            animId = null;
+            return; 
         }
 
-        // 2. Time Domain
-        tmCtx.clearRect(0,0,tmW,tmH);
-        tmCtx.beginPath();
-        tmCtx.strokeStyle = '#00f0ff';
-        tmCtx.lineWidth = 2;
-        const hist = 1.5;
-        const wY = tmH/2;
-        const wA = tmH*0.4;
-        
-        for (let px=0; px<=tmW; px+=2) {
-            const tOffset = (px/tmW)*hist;
-            const eTime = time - hist + tOffset;
-            if(eTime < 0) { tmCtx.moveTo(px, wY); continue; }
-            const ei = Math.floor(eTime/bitDuration)%64;
-            const ef = bitstream[ei]===1 ? f1 : f0;
-            let pa = 0;
-            for(let j=0; j<ei; j++) pa += 2*Math.PI*(bitstream[j]===1?f1:f0)*bitDuration;
-            pa += 2*Math.PI*ef*(eTime%bitDuration);
-            
-            const sig = Math.cos(pa);
-            const nz = (currentNoiseLevel/100) * 1.5 * randn_bm();
-            const y = wY - wA*(sig+nz);
-            if(px===0) tmCtx.moveTo(px,y); else tmCtx.lineTo(px,y);
-        }
-        tmCtx.stroke();
+        const delta = t - lastStepTime;
+        if (delta >= STEP_MS) {
+            lastStepTime = t;
+            const bFreq = bitstream[dashBitIndex] === 1 ? f1 : f0;
 
-        // 3. FFT
-        fCtx.clearRect(0,0,fW,fH);
-        const N = 128;
-        const dt = bitDuration/N;
-        const buf = new Float32Array(N);
-        for (let i=0; i<N; i++) {
-            const sig = Math.cos(2*Math.PI*bFreq*(i*dt));
-            const nz = (currentNoiseLevel/100) * 1.5 * randn_bm();
-            buf[i] = sig+nz;
-        }
-        const mags = computeFFT(buf);
-        const bw = (fW*0.8)/10;
-        const sx = fW*0.1;
-        const by = fH*0.85;
-        
-        fCtx.fillStyle = '#233554';
-        fCtx.fillRect(sx, by, fW*0.8, 2);
-        
-        for (let k=0; k<10; k++) {
-            const mag = mags[k]||0;
-            const bh = mag*(fH*1.8);
-            fCtx.fillStyle = '#a8b2d1';
-            if(k===f0) fCtx.fillStyle = '#00f0ff';
-            if(k===f1) fCtx.fillStyle = '#ff9000';
-            fCtx.fillRect(sx+k*bw+2, by-bh, bw-4, bh);
-            fCtx.fillStyle = '#f8faff';
-            fCtx.font = '10px JetBrains Mono';
-            fCtx.fillText(k, sx+k*bw+bw/2 - 3, by+15);
-        }
-
-        // 4. RX 
-        rCtx.clearRect(0,0,rW,rH);
-        // Clear RX if we loop back to start
-        if(bIdx === 0 && bTime < 0.1) rxBits.fill(null);
-        
-        const errProb = currentNoiseLevel > 75 ? 0.15 : (currentNoiseLevel > 40 ? 0.05 : 0);
-        if(rxBits[bIdx] === null) {
-            const act = bitstream[bIdx];
-            rxBits[bIdx] = Math.random() < errProb ? (act===1?0:1) : act;
-        }
-
-        const rcs = Math.min(rW, rH) * 0.1;
-        const rox = rW/2 - 4*rcs;
-        const roy = rH/2 - 4*rcs + 10;
-        for (let r=0; r<8; r++) {
-            for (let c=0; c<8; c++) {
-                const idx = r*8+c;
-                rCtx.strokeStyle = '#233554';
-                rCtx.strokeRect(rox+c*rcs, roy+r*rcs, rcs, rcs);
-                if(rxBits[idx] !== null) {
-                    const isErr = rxBits[idx] !== bitstream[idx];
-                    rCtx.fillStyle = rxBits[idx] === 1 ? (isErr ? '#ff4d60' : '#00f0ff') : 'transparent';
-                    if(rxBits[idx]===1) rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2);
-                    else if(isErr) { rCtx.fillStyle='#ff4d60'; rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2); }
+            tCtx.clearRect(0,0,tW,tH);
+            const cs = Math.min(tW, tH) * 0.1;
+            const ox = tW/2 - 4*cs;
+            const oy = tH/2 - 4*cs + 10;
+            for (let r=0; r<8; r++) {
+                for (let c=0; c<8; c++) {
+                    const idx = r*8+c;
+                    tCtx.fillStyle = smiley8x8[r][c] ? '#00f0ff' : '#233554';
+                    if (idx === dashBitIndex) tCtx.fillStyle = '#ff9000';
+                    tCtx.fillRect(ox+c*cs, oy+r*cs, cs-1, cs-1);
                 }
             }
+
+            tmCtx.clearRect(0,0,tmW,tmH);
+            tmCtx.beginPath();
+            tmCtx.strokeStyle = '#00f0ff';
+            tmCtx.lineWidth = 2;
+            const wY = tmH/2;
+            const wA = tmH*0.4;
+            
+            for (let px=0; px<=tmW; px+=2) {
+                const phase = 2*Math.PI*bFreq * (px/tmW);
+                const sig = Math.cos(phase);
+                const nz = (currentNoiseLevel/100) * 1.5 * randn_bm();
+                const y = wY - wA*(sig+nz);
+                if(px===0) tmCtx.moveTo(px,y); else tmCtx.lineTo(px,y);
+            }
+            tmCtx.stroke();
+
+            fCtx.clearRect(0,0,fW,fH);
+            const bw = (fW*0.8)/10;
+            const sx = fW*0.1;
+            const by = fH*0.85;
+            
+            fCtx.fillStyle = '#233554';
+            fCtx.fillRect(sx, by, fW*0.8, 2);
+            
+            for (let k=0; k<10; k++) {
+                let mag = (currentNoiseLevel/100) * 0.3 * Math.abs(randn_bm());
+                if (k === bFreq) mag += 1.0; 
+                
+                const bh = mag*(fH*0.4);
+                fCtx.fillStyle = '#a8b2d1';
+                if(k===f0) fCtx.fillStyle = '#00f0ff';
+                if(k===f1) fCtx.fillStyle = '#ff9000';
+                fCtx.fillRect(sx+k*bw+2, by-bh, bw-4, bh);
+                fCtx.fillStyle = '#f8faff';
+                fCtx.font = '10px JetBrains Mono';
+                fCtx.fillText(k, sx+k*bw+bw/2 - 3, by+15);
+            }
+
+            const errProb = currentNoiseLevel > 75 ? 0.15 : (currentNoiseLevel > 40 ? 0.05 : 0);
+            const act = bitstream[dashBitIndex];
+            rxBits[dashBitIndex] = Math.random() < errProb ? (act===1?0:1) : act;
+
+            rCtx.clearRect(0,0,rW,rH);
+            const rcs = Math.min(rW, rH) * 0.1;
+            const rox = rW/2 - 4*rcs;
+            const roy = rH/2 - 4*rcs + 10;
+            for (let r=0; r<8; r++) {
+                for (let c=0; c<8; c++) {
+                    const idx = r*8+c;
+                    rCtx.strokeStyle = '#233554';
+                    rCtx.strokeRect(rox+c*rcs, roy+r*rcs, rcs, rcs);
+                    if(rxBits[idx] !== null) {
+                        const isErr = rxBits[idx] !== bitstream[idx];
+                        rCtx.fillStyle = rxBits[idx] === 1 ? (isErr ? '#ff4d60' : '#00f0ff') : 'transparent';
+                        if(rxBits[idx]===1) rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2);
+                        else if(isErr) { rCtx.fillStyle='#ff4d60'; rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2); }
+                    }
+                }
+            }
+
+            dashBitIndex++; 
         }
 
-        requestAnimationFrame(draw);
+        animId = requestAnimationFrame(dashLoop);
     }
-    requestAnimationFrame(draw);
+
+    // Dashboard observer - just toggles visibility flag.
+    createVisibilityObserver(document.getElementById('slide-6'), 
+        () => { isVisible = true; },
+        () => { isVisible = false; }
+    );
 })();
