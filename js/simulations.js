@@ -556,7 +556,89 @@ let currentNoiseLevel = 10;
     );
 })();
 
-/* ================= Slide 6: Dashboard Finale ================= */
+/* ================= Slide 6: Windowing ================= */
+(function initWindowing() {
+    const canvas = document.getElementById('canvas-windowing');
+    if (!canvas) return;
+    let { w, h, ctx } = resizeCanvas(canvas);
+    window.addEventListener('resize', () => { ({ w, h, ctx } = resizeCanvas(canvas)); });
+
+    let animId = null;
+    let isVisible = false;
+
+    const numBits = 8;
+    const staticBuffer = new Float32Array(1024);
+    
+    for(let i = 0; i < 1024; i++) {
+        const time = i / 1024;
+        const bIdx = Math.floor(time * numBits);
+        const bFreq = (bIdx % 2 === 0) ? f1 : f0;
+        const sig = Math.cos(2 * Math.PI * bFreq * (i/1024 * 50)); 
+        const noise = 0.5 * randn_bm();
+        staticBuffer[i] = sig + noise;
+    }
+
+    let startTime = null;
+    
+    function draw(t) {
+        if (!isVisible) return;
+        ctx.clearRect(0, 0, w, h);
+        
+        if (!startTime) startTime = t;
+        const elapsed = t - startTime;
+        
+        // Draw the static wave
+        ctx.beginPath();
+        ctx.strokeStyle = '#a8b2d1';
+        ctx.lineWidth = 2;
+        const midY = h / 2;
+        const amp = h * 0.3;
+        for (let i = 0; i <= 1024; i++) {
+            const x = (i / 1024) * w;
+            const y = midY - amp * staticBuffer[i];
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // The Sliding Window Logic
+        const msPerBit = 1000;
+        const totalDuration = numBits * msPerBit;
+        const loopTime = elapsed % totalDuration;
+        
+        const currentBitIndex = Math.floor(loopTime / msPerBit);
+        const bitProgress = (loopTime % msPerBit) / msPerBit;
+        
+        const windowWidth = w / numBits;
+        
+        let xOffset = currentBitIndex * windowWidth;
+        if (bitProgress > 0.8) {
+            const slideProgress = (bitProgress - 0.8) / 0.2;
+            xOffset += slideProgress * windowWidth;
+        }
+
+        ctx.fillStyle = 'rgba(255, 194, 89, 0.4)';
+        ctx.fillRect(xOffset, 0, windowWidth, h);
+        
+        ctx.strokeStyle = '#ffc259';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(xOffset, 0, windowWidth, h);
+        
+        ctx.fillStyle = '#ffc259';
+        ctx.font = '16px JetBrains Mono';
+        ctx.textAlign = 'center';
+        ctx.fillText('Window (T_bit)', xOffset + windowWidth/2, h * 0.1);
+
+        animId = requestAnimationFrame(draw);
+    }
+
+    createVisibilityObserver(canvas, 
+        () => { isVisible = true; startTime = performance.now(); if(!animId) animId = requestAnimationFrame(draw); },
+        () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
+    );
+})();
+
+/* ================= Slide 7: Dashboard Finale ================= */
 (function initDashboard() {
     const cTX = document.getElementById('dash-tx');
     const cTime = document.getElementById('dash-time');

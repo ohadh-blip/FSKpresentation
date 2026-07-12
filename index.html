@@ -24,7 +24,7 @@
     <canvas id="bg-ambient"></canvas>
 
     <!-- UI Elements -->
-    <div id="slide-counter"><b id="counter-cur">01</b> / 07</div>
+    <div id="slide-counter"><b id="counter-cur">01</b> / 08</div>
     <div id="nav-dots"></div>
     <div id="nav-arrows">
         <button class="nav-arrow-btn" id="prevBtn" aria-label="הקודם">↑</button>
@@ -158,8 +158,31 @@
             </div>
         </section>
 
-        <!-- SLIDE 5 - RECONSTRUCTION -->
+        <!-- SLIDE 5 - WINDOWING -->
         <section class="slide" id="slide-5">
+            <div class="slide-inner">
+                <div class="eyebrow">אסטרטגיית הפענוח (Windowing)</div>
+                <h2 class="slide-title">איך נחלץ את המידע? ניתוח בחלונות זמן</h2>
+                <div class="cols">
+                    <div class="content-col">
+                        <p>האות שקיבלנו מלא ברעש, והתדר שלו משתנה בכל פעם שמשודר ביט חדש. מכיוון שהתדר אינו קבוע לאורך זמן, אי אפשר לנתח את האות כולו בבת אחת.<br><br>כדי לגלות מה שודר, אנו נדרשים לחלק את האות הנקלט לחלונות זמן (Time Windows) עוקבים. כל חלון כזה מייצג בדיוק את משך הזמן שלוקח לשדר ביט בודד ($T_{bit}$).</p>
+                        <div class="panel mt-4 border-amber">
+                            <div class="font-bold text-amber mb-2">מעבר חלון אחר חלון:</div>
+                            <p>התהליך שלנו יהיה לעבור על האות מקטע אחר מקטע. על כל חלון זמן נפעיל בנפרד התמרת פורייה (DFT). פעולה זו תאפשר לנו "להציץ" לתוך החלון הנוכחי, לחלץ את תוכן התדרים הספציפי שלו מתוך הרעש, ולהמשיך לחלון הבא כדי לפענח את הביט הבא בשרשרת.</p>
+                        </div>
+                    </div>
+                    <div class="anim-col">
+                        <div class="anim-box">
+                            <div class="anim-label">אנימציה: Sliding Window Analysis</div>
+                            <canvas id="canvas-windowing"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6 - RECONSTRUCTION -->
+        <section class="slide" id="slide-6">
             <div class="slide-inner">
                 <div class="eyebrow">סינון ושחזור</div>
                 <h2 class="slide-title">פענוח התמונה</h2>
@@ -175,7 +198,6 @@
                     </div>
                     <div class="anim-col">
                         <div class="anim-box">
-                            <div class="anim-label">אנימציה: Bandpass & Reconstruction</div>
                             <canvas id="canvas-reconstruct"></canvas>
                         </div>
                         <div class="controls mt-2 text-center">
@@ -186,8 +208,8 @@
             </div>
         </section>
 
-        <!-- SLIDE 6 - FINALE DASHBOARD -->
-        <section class="slide" id="slide-6">
+        <!-- SLIDE 7 - FINALE DASHBOARD -->
+        <section class="slide" id="slide-7">
             <div class="slide-inner" style="max-width: 1600px;">
                 <div class="eyebrow">The Grand Finale</div>
                 <h2 class="slide-title text-center">מערכת תקשורת בזמן אמת (Sandbox)</h2>
