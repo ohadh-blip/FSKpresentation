@@ -585,6 +585,7 @@ let currentNoiseLevel = 10;
 
     let rxBits = new Array(64).fill(null);
     let animId = null;
+    let loopTimeout = null;
     let dashBitIndex = 0;
     let lastStepTime = 0;
     const STEP_MS = 100;
@@ -633,15 +634,24 @@ let currentNoiseLevel = 10;
     }
     setTimeout(drawEmpty, 100);
 
-    btnStart.addEventListener('click', () => {
-        if (animId) cancelAnimationFrame(animId);
-        btnStart.disabled = true;
-        btnStart.textContent = "סימולציה פועלת...";
-        
+    function resetAndRestartDashboard() {
         dashBitIndex = 0;
         rxBits.fill(null);
+        drawEmpty();
         lastStepTime = performance.now();
         animId = requestAnimationFrame(dashLoop);
+    }
+
+    btnStart.addEventListener('click', () => {
+        if (animId) cancelAnimationFrame(animId);
+        if (loopTimeout) clearTimeout(loopTimeout);
+        
+        // Hide button gracefully to prevent race conditions
+        btnStart.style.transition = "opacity 0.5s ease";
+        btnStart.style.opacity = "0";
+        btnStart.style.pointerEvents = "none";
+        
+        resetAndRestartDashboard();
     });
 
     function dashLoop(t) {
@@ -651,9 +661,8 @@ let currentNoiseLevel = 10;
         }
 
         if (dashBitIndex >= 64) {
-            btnStart.disabled = false;
-            btnStart.textContent = "התחל סימולציה (Start Demo)";
             animId = null;
+            loopTimeout = setTimeout(resetAndRestartDashboard, 1500);
             return; 
         }
 
@@ -750,7 +759,17 @@ let currentNoiseLevel = 10;
     }
 
     createVisibilityObserver(document.getElementById('slide-6'), 
-        () => { isVisible = true; },
-        () => { isVisible = false; }
+        () => { 
+            isVisible = true; 
+            // If the loop was already started before leaving, resume it fresh
+            if (btnStart.style.opacity === "0" && !animId && !loopTimeout) {
+                resetAndRestartDashboard();
+            }
+        },
+        () => { 
+            isVisible = false; 
+            if (animId) { cancelAnimationFrame(animId); animId = null; }
+            if (loopTimeout) { clearTimeout(loopTimeout); loopTimeout = null; }
+        }
     );
 })();
