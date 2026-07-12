@@ -891,7 +891,7 @@ let currentNoiseLevel = 10;
         animId = requestAnimationFrame(dashLoop);
     }
 
-    createVisibilityObserver(document.getElementById('slide-6'), 
+    createVisibilityObserver(document.getElementById('slide-7'), 
         () => { 
             isVisible = true; 
             // If the loop was already started before leaving, resume it fresh

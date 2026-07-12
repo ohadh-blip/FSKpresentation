@@ -37,15 +37,19 @@
 
         <!-- SLIDE 0 - TITLE -->
         <section class="slide" id="slide-0">
-            <div class="slide-inner text-center">
-                <div class="eyebrow">קורס אותות ומערכות</div>
-                <h1 class="slide-title">שימוש בהתמרת פורייה למערכות תקשורת:<br><span class="highlight-cyan">קידוד ופענוח אותות FSK</span></h1>
-                <p class="slide-subtitle mt-4">מעבר ממישור הזמן למישור התדר בתקשורת ספרתית</p>
-                <div class="mt-8">
-                    <p class="presenter-name">מגישים: אוהד חפץ ועומר בהרל</p>
+            <div class="slide-inner text-center" style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh;">
+                <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <h1 class="slide-title" style="color: #ffffff; line-height: 1.2;">שימוש בהתמרת פורייה למערכות תקשורת</h1>
+                    <h2 class="slide-title highlight-text" style="color: #ffc259; margin-top: 0.5rem; font-size: clamp(3rem, 5vw, 4.5rem);">קידוד ופענוח אותות FSK</h2>
+                    <p class="slide-subtitle mt-4" style="color: #ccd6f6; font-size: 1.4rem; max-width: 800px; text-align: center;">מעבר ממישור הזמן למישור התדר בתקשורת ספרתית</p>
+                    
+                    <div class="anim-box mt-6" style="height: 250px; width: 100%; max-width: 1200px;">
+                        <canvas id="canvas-title"></canvas>
+                    </div>
                 </div>
-                <div class="anim-box mt-6" style="height: 250px;">
-                    <canvas id="canvas-title"></canvas>
+                
+                <div style="margin-top: 4rem; margin-bottom: 2rem;">
+                    <p class="presenter-name" style="font-family: var(--font-mono); color: #ffffff; font-size: 1.4rem; letter-spacing: 0.05em;">אוהד חפץ &nbsp;&bull;&nbsp; עומר בהרל</p>
                 </div>
             </div>
         </section>
