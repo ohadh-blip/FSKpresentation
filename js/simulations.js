@@ -190,7 +190,7 @@ let isTransmitting = false;
 
                 if (alpha > 0) {
                     ctx.globalAlpha = alpha;
-                    ctx.fillStyle = smiley8x8[r][c] ? '#ffc259' : '#233554';
+                    ctx.fillStyle = smiley8x8[r][c] ? '#0000FF' : '#ffffff';
                     ctx.fillRect(px, py, cellSize-2, cellSize-2);
                     ctx.globalAlpha = 1.0;
                 }
@@ -522,13 +522,12 @@ let currentNoiseLevel = 10;
 
                 if (decodedBits[idx] !== null) {
                     const isError = decodedBits[idx] !== bitstream[idx];
-                    ctx.fillStyle = decodedBits[idx] === 1 ? (isError ? '#ff4d60' : '#ffc259') : 'transparent';
                     if (decodedBits[idx] === 1) {
-                        ctx.fillRect(px+1, py+1, cellSize-2, cellSize-2);
-                    } else if (isError) {
-                        ctx.fillStyle = '#ff4d60';
-                        ctx.fillRect(px+1, py+1, cellSize-2, cellSize-2);
+                        ctx.fillStyle = isError ? '#ff4d60' : '#0000FF';
+                    } else {
+                        ctx.fillStyle = isError ? '#ff4d60' : '#ffffff';
                     }
+                    ctx.fillRect(px+1, py+1, cellSize-2, cellSize-2);
                 }
             }
         }
@@ -731,7 +730,7 @@ let currentNoiseLevel = 10;
         // BUG 1 FIX: Strictly iterate < 8
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
-                tCtx.fillStyle = smiley8x8[r][c] ? '#ffc259' : '#233554';
+                tCtx.fillStyle = smiley8x8[r][c] ? '#0000FF' : '#ffffff';
                 tCtx.fillRect(tox+c*tcs, toy+r*tcs, tcs-1, tcs-1);
             }
         }
@@ -818,8 +817,8 @@ let currentNoiseLevel = 10;
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const idx = r * 8 + c;
-                    tCtx.fillStyle = smiley8x8[r][c] ? '#ffc259' : '#233554';
-                    if (idx === dashBitIndex) tCtx.fillStyle = '#ffffff'; // Changed indicator to white for contrast
+                    tCtx.fillStyle = smiley8x8[r][c] ? '#0000FF' : '#ffffff';
+                    if (idx === dashBitIndex) tCtx.fillStyle = '#ffc259'; // Changed indicator to Amber for contrast
                     tCtx.fillRect(tox+c*tcs, toy+r*tcs, tcs-1, tcs-1);
                 }
             }
@@ -880,9 +879,12 @@ let currentNoiseLevel = 10;
                     
                     if(rxBits[idx] !== null) {
                         const isErr = rxBits[idx] !== bitstream[idx];
-                        rCtx.fillStyle = rxBits[idx] === 1 ? (isErr ? '#ff4d60' : '#ffc259') : 'transparent';
-                        if(rxBits[idx]===1) rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2);
-                        else if(isErr) { rCtx.fillStyle='#ff4d60'; rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2); }
+                        if (rxBits[idx] === 1) {
+                            rCtx.fillStyle = isErr ? '#ff4d60' : '#0000FF';
+                        } else {
+                            rCtx.fillStyle = isErr ? '#ff4d60' : '#ffffff';
+                        }
+                        rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2);
                     }
                 }
             }
