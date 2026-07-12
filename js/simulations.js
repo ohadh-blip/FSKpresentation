@@ -97,7 +97,7 @@ let isTransmitting = false;
                 const y = yOffset + Math.sin(x * 0.005 + time + i) * 30 * Math.sin(time*0.5 + i);
                 if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
-            ctx.strokeStyle = i % 2 === 0 ? 'rgba(0, 240, 255, 0.1)' : 'rgba(255, 144, 0, 0.1)';
+            ctx.strokeStyle = i % 2 === 0 ? 'rgba(255, 194, 89, 0.1)' : 'rgba(255, 194, 89, 0.1)';
             ctx.stroke();
         }
         animId = requestAnimationFrame(draw);
@@ -131,7 +131,7 @@ let isTransmitting = false;
             const y = h/2 + (Math.sin(x*0.05 + time*f0) + 0.5*Math.sin(x*0.1 + time*f1)) * 40 * env;
             if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.8)';
+        ctx.strokeStyle = 'rgba(255, 194, 89, 0.8)';
         ctx.stroke();
         animId = requestAnimationFrame(draw);
     }
@@ -190,7 +190,7 @@ let isTransmitting = false;
 
                 if (alpha > 0) {
                     ctx.globalAlpha = alpha;
-                    ctx.fillStyle = smiley8x8[r][c] ? '#00f0ff' : '#233554';
+                    ctx.fillStyle = smiley8x8[r][c] ? '#ffc259' : '#233554';
                     ctx.fillRect(px, py, cellSize-2, cellSize-2);
                     ctx.globalAlpha = 1.0;
                 }
@@ -209,7 +209,7 @@ let isTransmitting = false;
             if (unravelProgress > 64) unravelProgress = 64;
 
             ctx.font = '20px JetBrains Mono';
-            ctx.fillStyle = '#ff9000';
+            ctx.fillStyle = '#ffc259';
             ctx.textAlign = 'center';
             for (let i = 0; i < Math.floor(unravelProgress); i++) {
                 const bit = bitstream[i];
@@ -263,20 +263,20 @@ let isTransmitting = false;
             if (idx >= 0 && idx < 64) {
                 const px = w/2 + (i * 60) - ((time % bitDuration)/bitDuration * 60);
                 ctx.globalAlpha = 1 - (Math.abs(px - w/2) / (w/2));
-                ctx.fillStyle = idx === currentBitFrame ? '#ff9000' : '#a8b2d1';
+                ctx.fillStyle = idx === currentBitFrame ? '#ffc259' : '#a8b2d1';
                 ctx.fillText(bitstream[idx].toString(), px, h*0.2);
             }
         }
         ctx.globalAlpha = 1.0;
         
-        ctx.strokeStyle = '#ff9000';
+        ctx.strokeStyle = '#ffc259';
         ctx.strokeRect(w/2 - 15, h*0.2 - 25, 30, 35);
 
         const waveY = h * 0.7;
         const waveAmp = h * 0.2;
         
         ctx.beginPath();
-        ctx.strokeStyle = '#00f0ff';
+        ctx.strokeStyle = '#ffc259';
         ctx.lineWidth = 3;
 
         const historySeconds = 2.0;
@@ -313,7 +313,7 @@ let isTransmitting = false;
 })();
 
 /* ================= Slide 3: AWGN Noise ================= */
-let currentNoiseLevel = 0;
+let currentNoiseLevel = 10;
 (function initAWGN() {
     const canvas = document.getElementById('canvas-awgn');
     const slider = document.getElementById('slider-noise');
@@ -348,7 +348,7 @@ let currentNoiseLevel = 0;
         const waveAmp = h * 0.3;
         
         ctx.beginPath();
-        ctx.strokeStyle = '#ff9000';
+        ctx.strokeStyle = '#ffc259';
         ctx.lineWidth = 2;
 
         const historySeconds = 1.0; 
@@ -438,8 +438,8 @@ let currentNoiseLevel = 0;
             const px = startX + k * barWidth;
             
             ctx.fillStyle = '#a8b2d1';
-            if (k === f0) ctx.fillStyle = '#00f0ff';
-            if (k === f1) ctx.fillStyle = '#ff9000';
+            if (k === f0) ctx.fillStyle = '#ffc259';
+            if (k === f1) ctx.fillStyle = '#ffc259';
 
             ctx.fillRect(px + 4, baseY - barH, barWidth - 8, barH);
             
@@ -516,7 +516,7 @@ let currentNoiseLevel = 0;
 
                 if (decodedBits[idx] !== null) {
                     const isError = decodedBits[idx] !== bitstream[idx];
-                    ctx.fillStyle = decodedBits[idx] === 1 ? (isError ? '#ff4d60' : '#00f0ff') : 'transparent';
+                    ctx.fillStyle = decodedBits[idx] === 1 ? (isError ? '#ff4d60' : '#ffc259') : 'transparent';
                     if (decodedBits[idx] === 1) {
                         ctx.fillRect(px+1, py+1, cellSize-2, cellSize-2);
                     } else if (isError) {
@@ -590,6 +590,49 @@ let currentNoiseLevel = 0;
     const STEP_MS = 100;
     let isVisible = false;
 
+    function drawEmpty() {
+        tCtx.clearRect(0,0,tW,tH);
+        tmCtx.clearRect(0,0,tmW,tmH);
+        fCtx.clearRect(0,0,fW,fH);
+        rCtx.clearRect(0,0,rW,rH);
+        
+        // TX Grid
+        const tcs = Math.min(tW, tH) * 0.1;
+        const tox = tW/2 - 4*tcs;
+        const toy = tH/2 - 4*tcs;
+        for (let r=0; r<8; r++) {
+            for (let c=0; c<8; c++) {
+                tCtx.fillStyle = smiley8x8[r][c] ? '#ffc259' : '#233554';
+                tCtx.fillRect(tox+c*tcs, toy+r*tcs, tcs-1, tcs-1);
+            }
+        }
+        
+        // RX Grid
+        const rcs = Math.min(rW, rH) * 0.1;
+        const rox = rW/2 - 4*rcs;
+        const roy = rH/2 - 4*rcs;
+        for (let r=0; r<8; r++) {
+            for (let c=0; c<8; c++) {
+                rCtx.strokeStyle = '#233554';
+                rCtx.strokeRect(rox+c*rcs, roy+r*rcs, rcs, rcs);
+            }
+        }
+        
+        // FFT Bins
+        const bw = fW * 0.2;
+        const bx0 = fW * 0.25 - bw/2;
+        const bx1 = fW * 0.75 - bw/2;
+        const by = fH * 0.8;
+        fCtx.fillStyle = '#233554';
+        fCtx.fillRect(fW*0.1, by, fW*0.8, 2);
+        fCtx.fillStyle = '#f8faff';
+        fCtx.font = '14px JetBrains Mono';
+        fCtx.textAlign = 'center';
+        fCtx.fillText('f0 (2Hz)', bx0 + bw/2, by + 20);
+        fCtx.fillText('f1 (5Hz)', bx1 + bw/2, by + 20);
+    }
+    setTimeout(drawEmpty, 100);
+
     btnStart.addEventListener('click', () => {
         if (animId) cancelAnimationFrame(animId);
         btnStart.disabled = true;
@@ -603,7 +646,6 @@ let currentNoiseLevel = 0;
 
     function dashLoop(t) {
         if (!isVisible) {
-            // If the user navigates away, we pause without losing state.
             animId = requestAnimationFrame(dashLoop);
             return;
         }
@@ -618,28 +660,34 @@ let currentNoiseLevel = 0;
         const delta = t - lastStepTime;
         if (delta >= STEP_MS) {
             lastStepTime = t;
-            const bFreq = bitstream[dashBitIndex] === 1 ? f1 : f0;
+            const act = bitstream[dashBitIndex];
+            const bFreq = act === 1 ? f1 : f0;
 
+            const errProb = currentNoiseLevel > 75 ? 0.15 : (currentNoiseLevel > 40 ? 0.05 : 0);
+            const decoded = Math.random() < errProb ? (act===1?0:1) : act;
+            rxBits[dashBitIndex] = decoded;
+
+            // 1. TX Grid
             tCtx.clearRect(0,0,tW,tH);
-            const cs = Math.min(tW, tH) * 0.1;
-            const ox = tW/2 - 4*cs;
-            const oy = tH/2 - 4*cs + 10;
+            const tcs = Math.min(tW, tH) * 0.1;
+            const tox = tW/2 - 4*tcs;
+            const toy = tH/2 - 4*tcs;
             for (let r=0; r<8; r++) {
                 for (let c=0; c<8; c++) {
                     const idx = r*8+c;
-                    tCtx.fillStyle = smiley8x8[r][c] ? '#00f0ff' : '#233554';
-                    if (idx === dashBitIndex) tCtx.fillStyle = '#ff9000';
-                    tCtx.fillRect(ox+c*cs, oy+r*cs, cs-1, cs-1);
+                    tCtx.fillStyle = smiley8x8[r][c] ? '#ffc259' : '#233554';
+                    if (idx === dashBitIndex) tCtx.fillStyle = '#ffc259';
+                    tCtx.fillRect(tox+c*tcs, toy+r*tcs, tcs-1, tcs-1);
                 }
             }
 
+            // 2. Channel Time Domain
             tmCtx.clearRect(0,0,tmW,tmH);
             tmCtx.beginPath();
-            tmCtx.strokeStyle = '#00f0ff';
+            tmCtx.strokeStyle = '#ffc259';
             tmCtx.lineWidth = 2;
             const wY = tmH/2;
             const wA = tmH*0.4;
-            
             for (let px=0; px<=tmW; px+=2) {
                 const phase = 2*Math.PI*bFreq * (px/tmW);
                 const sig = Math.cos(phase);
@@ -649,57 +697,58 @@ let currentNoiseLevel = 0;
             }
             tmCtx.stroke();
 
+            // 3. FFT
             fCtx.clearRect(0,0,fW,fH);
-            const bw = (fW*0.8)/10;
-            const sx = fW*0.1;
-            const by = fH*0.85;
-            
+            const bw = fW * 0.2;
+            const bx0 = fW * 0.25 - bw/2;
+            const bx1 = fW * 0.75 - bw/2;
+            const by = fH * 0.8;
             fCtx.fillStyle = '#233554';
-            fCtx.fillRect(sx, by, fW*0.8, 2);
+            fCtx.fillRect(fW*0.1, by, fW*0.8, 2);
             
-            for (let k=0; k<10; k++) {
-                let mag = (currentNoiseLevel/100) * 0.3 * Math.abs(randn_bm());
-                if (k === bFreq) mag += 1.0; 
-                
-                const bh = mag*(fH*0.4);
-                fCtx.fillStyle = '#a8b2d1';
-                if(k===f0) fCtx.fillStyle = '#00f0ff';
-                if(k===f1) fCtx.fillStyle = '#ff9000';
-                fCtx.fillRect(sx+k*bw+2, by-bh, bw-4, bh);
-                fCtx.fillStyle = '#f8faff';
-                fCtx.font = '10px JetBrains Mono';
-                fCtx.fillText(k, sx+k*bw+bw/2 - 3, by+15);
-            }
+            let mag0 = (currentNoiseLevel/100) * 0.2 * Math.abs(randn_bm());
+            if (bFreq === f0) mag0 += 1.0;
+            const bh0 = mag0 * (fH * 0.5);
+            fCtx.fillStyle = (bFreq === f0) ? '#ffc259' : '#a8b2d1';
+            fCtx.fillRect(bx0, by - bh0, bw, bh0);
+            
+            let mag1 = (currentNoiseLevel/100) * 0.2 * Math.abs(randn_bm());
+            if (bFreq === f1) mag1 += 1.0;
+            const bh1 = mag1 * (fH * 0.5);
+            fCtx.fillStyle = (bFreq === f1) ? '#ffc259' : '#a8b2d1';
+            fCtx.fillRect(bx1, by - bh1, bw, bh1);
 
-            const errProb = currentNoiseLevel > 75 ? 0.15 : (currentNoiseLevel > 40 ? 0.05 : 0);
-            const act = bitstream[dashBitIndex];
-            rxBits[dashBitIndex] = Math.random() < errProb ? (act===1?0:1) : act;
+            fCtx.fillStyle = '#f8faff';
+            fCtx.font = '14px JetBrains Mono';
+            fCtx.textAlign = 'center';
+            fCtx.fillText('f0 (2Hz)', bx0 + bw/2, by + 20);
+            fCtx.fillText('f1 (5Hz)', bx1 + bw/2, by + 20);
 
+            // 4. RX Grid
             rCtx.clearRect(0,0,rW,rH);
             const rcs = Math.min(rW, rH) * 0.1;
             const rox = rW/2 - 4*rcs;
-            const roy = rH/2 - 4*rcs + 10;
+            const roy = rH/2 - 4*rcs;
+            
             for (let r=0; r<8; r++) {
                 for (let c=0; c<8; c++) {
                     const idx = r*8+c;
                     rCtx.strokeStyle = '#233554';
                     rCtx.strokeRect(rox+c*rcs, roy+r*rcs, rcs, rcs);
+                    
                     if(rxBits[idx] !== null) {
                         const isErr = rxBits[idx] !== bitstream[idx];
-                        rCtx.fillStyle = rxBits[idx] === 1 ? (isErr ? '#ff4d60' : '#00f0ff') : 'transparent';
+                        rCtx.fillStyle = rxBits[idx] === 1 ? (isErr ? '#ff4d60' : '#ffc259') : 'transparent';
                         if(rxBits[idx]===1) rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2);
                         else if(isErr) { rCtx.fillStyle='#ff4d60'; rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2); }
                     }
                 }
             }
-
             dashBitIndex++; 
         }
-
         animId = requestAnimationFrame(dashLoop);
     }
 
-    // Dashboard observer - just toggles visibility flag.
     createVisibilityObserver(document.getElementById('slide-6'), 
         () => { isVisible = true; },
         () => { isVisible = false; }

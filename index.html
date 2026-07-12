@@ -118,8 +118,8 @@
                         </div>
                         <p class="mt-2 text-sm muted" dir="rtl">כאשר <span class="math-inline">$n(t)$</span> הוא מודל רעש גאוסי לבן (AWGN).</p>
                         <div class="panel mt-4">
-                            <label class="slider-label">עוצמת רעש (Noise Level) <span id="noise-val" class="highlight-orange">0%</span></label>
-                            <input type="range" id="slider-noise" min="0" max="100" value="0" class="slider-full">
+                            <label class="slider-label">עוצמת רעש (Noise Level) <span id="noise-val" class="highlight-orange">10%</span></label>
+                            <input type="range" id="slider-noise" min="0" max="100" value="10" class="slider-full">
                         </div>
                     </div>
                     <div class="anim-col">
@@ -203,15 +203,15 @@
                         <div class="dash-title">1. Transmitter (Baseband)</div>
                         <canvas id="dash-tx" class="dash-canvas"></canvas>
                     </div>
-                    <div class="dash-panel span-2 border-orange">
+                    <div class="dash-panel span-2 border-amber">
                         <div class="dash-title">2. Channel: FSK + AWGN Time Domain</div>
                         <canvas id="dash-time" class="dash-canvas"></canvas>
                         <div class="mt-2 text-center" style="padding:0 1rem;">
-                            <label class="slider-label text-sm">Noise: <span id="dash-noise-val">0%</span></label>
-                            <input type="range" id="dash-slider-noise" min="0" max="100" value="0" class="slider-full">
+                            <label class="slider-label text-sm">Noise: <span id="dash-noise-val">10%</span></label>
+                            <input type="range" id="dash-slider-noise" min="0" max="100" value="10" class="slider-full">
                         </div>
                     </div>
-                    <div class="dash-panel span-2 border-cyan">
+                    <div class="dash-panel span-2 border-amber">
                         <div class="dash-title">3. Receiver: FFT Frequency Domain</div>
                         <canvas id="dash-fft" class="dash-canvas"></canvas>
                     </div>
