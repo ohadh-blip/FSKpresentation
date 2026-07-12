@@ -19,6 +19,22 @@ let current = 0;
 function setActive(i) {
     current = i;
     dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+    
+    // Hide non-active slides to prevent overlap/bleeding
+    slides.forEach((s, idx) => {
+        if (idx === i) {
+            s.style.opacity = '1';
+            s.style.visibility = 'visible';
+            s.style.pointerEvents = 'auto';
+            s.style.zIndex = '10';
+        } else {
+            s.style.opacity = '0';
+            s.style.visibility = 'hidden';
+            s.style.pointerEvents = 'none';
+            s.style.zIndex = '0';
+        }
+    });
+
     counterCur.textContent = String(i + 1).padStart(2, '0');
     navLabel.textContent = i === slides.length - 1 ? 'סוף' : 'גללו למטה';
     prevBtn.disabled = false;
@@ -55,3 +71,6 @@ deck.addEventListener('scroll', () => {
         scrollTicking = true;
     }
 });
+
+// Initialize first slide on load
+setActive(0);
