@@ -171,10 +171,14 @@
                             <p>התהליך שלנו יהיה לעבור על האות מקטע אחר מקטע. על כל חלון זמן נפעיל בנפרד התמרת פורייה (DFT). פעולה זו תאפשר לנו "להציץ" לתוך החלון הנוכחי, לחלץ את תוכן התדרים הספציפי שלו מתוך הרעש, ולהמשיך לחלון הבא כדי לפענח את הביט הבא בשרשרת.</p>
                         </div>
                     </div>
-                    <div class="anim-col">
-                        <div class="anim-box">
-                            <div class="anim-label">אנימציה: Sliding Window Analysis</div>
+                    <div class="anim-col" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div class="anim-box" style="aspect-ratio: auto; flex: 1;">
+                            <div class="anim-label">אנימציה: Sliding Window (Time)</div>
                             <canvas id="canvas-windowing"></canvas>
+                        </div>
+                        <div class="anim-box" style="aspect-ratio: auto; flex: 1;">
+                            <div class="anim-label">אנימציה: Window FFT (Freq)</div>
+                            <canvas id="canvas-windowing-fft"></canvas>
                         </div>
                     </div>
                 </div>

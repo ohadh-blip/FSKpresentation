@@ -558,10 +558,19 @@ let currentNoiseLevel = 10;
 
 /* ================= Slide 6: Windowing ================= */
 (function initWindowing() {
-    const canvas = document.getElementById('canvas-windowing');
-    if (!canvas) return;
-    let { w, h, ctx } = resizeCanvas(canvas);
-    window.addEventListener('resize', () => { ({ w, h, ctx } = resizeCanvas(canvas)); });
+    const canvasTime = document.getElementById('canvas-windowing');
+    const canvasFFT = document.getElementById('canvas-windowing-fft');
+    if (!canvasTime || !canvasFFT) return;
+    
+    let wTime, hTime, ctxTime;
+    let wFFT, hFFT, ctxFFT;
+    
+    function resizeAll() {
+        const rt = resizeCanvas(canvasTime); wTime = rt.w; hTime = rt.h; ctxTime = rt.ctx;
+        const rf = resizeCanvas(canvasFFT); wFFT = rf.w; hFFT = rf.h; ctxFFT = rf.ctx;
+    }
+    window.addEventListener('resize', resizeAll);
+    resizeAll();
 
     let animId = null;
     let isVisible = false;
@@ -582,57 +591,87 @@ let currentNoiseLevel = 10;
     
     function draw(t) {
         if (!isVisible) return;
-        ctx.clearRect(0, 0, w, h);
+        ctxTime.clearRect(0, 0, wTime, hTime);
+        ctxFFT.clearRect(0, 0, wFFT, hFFT);
         
         if (!startTime) startTime = t;
         const elapsed = t - startTime;
         
         // Draw the static wave
-        ctx.beginPath();
-        ctx.strokeStyle = '#a8b2d1';
-        ctx.lineWidth = 2;
-        const midY = h / 2;
-        const amp = h * 0.3;
+        ctxTime.beginPath();
+        ctxTime.strokeStyle = '#a8b2d1';
+        ctxTime.lineWidth = 2;
+        const midY = hTime / 2;
+        const amp = hTime * 0.3;
         for (let i = 0; i <= 1024; i++) {
-            const x = (i / 1024) * w;
+            const x = (i / 1024) * wTime;
             const y = midY - amp * staticBuffer[i];
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
+            if (i === 0) ctxTime.moveTo(x, y);
+            else ctxTime.lineTo(x, y);
         }
-        ctx.stroke();
+        ctxTime.stroke();
 
-        // The Sliding Window Logic
         const msPerBit = 1000;
         const totalDuration = numBits * msPerBit;
         const loopTime = elapsed % totalDuration;
         
         const currentBitIndex = Math.floor(loopTime / msPerBit);
         const bitProgress = (loopTime % msPerBit) / msPerBit;
+        const isTransitioning = bitProgress > 0.8;
         
-        const windowWidth = w / numBits;
+        const windowWidth = wTime / numBits;
         
         let xOffset = currentBitIndex * windowWidth;
-        if (bitProgress > 0.8) {
+        if (isTransitioning) {
             const slideProgress = (bitProgress - 0.8) / 0.2;
             xOffset += slideProgress * windowWidth;
         }
 
-        ctx.fillStyle = 'rgba(255, 194, 89, 0.4)';
-        ctx.fillRect(xOffset, 0, windowWidth, h);
+        ctxTime.fillStyle = 'rgba(255, 194, 89, 0.4)';
+        ctxTime.fillRect(xOffset, 0, windowWidth, hTime);
         
-        ctx.strokeStyle = '#ffc259';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(xOffset, 0, windowWidth, h);
+        ctxTime.strokeStyle = '#ffc259';
+        ctxTime.lineWidth = 3;
+        ctxTime.strokeRect(xOffset, 0, windowWidth, hTime);
         
-        ctx.fillStyle = '#ffc259';
-        ctx.font = '16px JetBrains Mono';
-        ctx.textAlign = 'center';
-        ctx.fillText('Window (T_bit)', xOffset + windowWidth/2, h * 0.1);
+        ctxTime.fillStyle = '#ffc259';
+        ctxTime.font = '16px JetBrains Mono';
+        ctxTime.textAlign = 'center';
+        ctxTime.fillText('Window (T_bit)', xOffset + windowWidth/2, hTime * 0.1);
+
+        // FFT Canvas Logic
+        const maxFreqToShow = 10;
+        const barWidth = (wFFT * 0.8) / maxFreqToShow;
+        const startX = wFFT * 0.1;
+        const by = hFFT * 0.8;
+        
+        ctxFFT.fillStyle = '#233554';
+        ctxFFT.fillRect(startX, by, wFFT*0.8, 2);
+
+        const currentFreq = (currentBitIndex % 2 === 0) ? f1 : f0;
+
+        for (let k = 0; k < maxFreqToShow; k++) {
+            let mag = 0.5 * Math.abs(randn_bm()); // Noise bed
+            
+            // Spike only if settled on a bit
+            if (!isTransitioning && currentFreq === k) mag += 1.0;
+            
+            const barH = mag * (hFFT * 0.5);
+            const px = startX + k * barWidth;
+            
+            ctxFFT.fillStyle = (!isTransitioning && currentFreq === k) ? '#ffc259' : '#a8b2d1';
+            ctxFFT.fillRect(px + 4, by - barH, barWidth - 8, barH);
+            
+            ctxFFT.fillStyle = '#f8faff';
+            ctxFFT.font = '14px JetBrains Mono';
+            ctxFFT.textAlign = 'center';
+            ctxFFT.fillText(k + 'Hz', px + barWidth/2, by + 20);
+        }
 
         animId = requestAnimationFrame(draw);
     }
 
-    createVisibilityObserver(canvas, 
+    createVisibilityObserver(canvasTime, 
         () => { isVisible = true; startTime = performance.now(); if(!animId) animId = requestAnimationFrame(draw); },
         () => { isVisible = false; if(animId) { cancelAnimationFrame(animId); animId = null; } }
     );
