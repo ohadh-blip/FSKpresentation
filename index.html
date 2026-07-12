@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FSK Modulation and Fourier Transform</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Rubik:wght@400;500;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for Math -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Ambient background -->
+    <canvas id="bg-ambient"></canvas>
+
+    <!-- UI Elements -->
+    <div id="slide-counter"><b id="counter-cur">01</b> / 07</div>
+    <div id="nav-dots"></div>
+    <div id="nav-arrows">
+        <button class="nav-arrow-btn" id="prevBtn" aria-label="הקודם">↑</button>
+        <span id="nav-label">גללו</span>
+        <button class="nav-arrow-btn" id="nextBtn" aria-label="הבא">↓</button>
+    </div>
+
+    <!-- Presentation Deck -->
+    <div id="deck">
+
+        <!-- SLIDE 0 - TITLE -->
+        <section class="slide" id="slide-0">
+            <div class="slide-inner text-center">
+                <div class="eyebrow">קורס אותות ומערכות</div>
+                <h1 class="slide-title">שימוש בהתמרת פורייה למערכות תקשורת:<br><span class="highlight-cyan">קידוד ופענוח אותות FSK</span></h1>
+                <p class="slide-subtitle mt-4">מעבר ממישור הזמן למישור התדר בתקשורת ספרתית</p>
+                <div class="mt-8">
+                    <p class="presenter-name">מגיש: תלמיד הקורס</p>
+                </div>
+                <div class="anim-box mt-6" style="height: 250px;">
+                    <canvas id="canvas-title"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 1 - BASEBAND -->
+        <section class="slide" id="slide-1">
+            <div class="slide-inner">
+                <div class="eyebrow">האתגר והמידע (The Baseband)</div>
+                <h2 class="slide-title">המידע הדיגיטלי כרצף ביטים</h2>
+                <div class="cols">
+                    <div class="content-col">
+                        <p>אנחנו רוצים לשדר תמונה (למשל סמיילי קטן של 8x8 פיקסלים) מאליס לבוב.</p>
+                        <p class="muted">המידע הדיגיטלי שלנו (Baseband) הוא רק אוסף של אפסים ואחדות. כדי לשדר אותו באוויר או בכבל, נצטרך להרכיב אותו על "גל נושא" (Carrier).</p>
+                        <div class="panel mt-4">
+                            <p class="highlight-orange font-bold">מידע דיגיטלי:</p>
+                            <p>כל פיקסל דלוק הוא '1' וכל פיקסל כבוי הוא '0'. התמונה הופכת לזרם טורי של ביטים שמועבר אחד אחרי השני.</p>
+                        </div>
+                    </div>
+                    <div class="anim-col">
+                        <div class="anim-box">
+                            <div class="anim-label">אנימציה: פריסת Baseband</div>
+                            <canvas id="canvas-baseband"></canvas>
+                        </div>
+                        <div class="controls mt-2 text-center">
+                            <button id="btn-send-baseband" class="primary-btn">שלח מידע (Send)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 2 - FSK MODULATION -->
+        <section class="slide" id="slide-2">
+            <div class="slide-inner">
+                <div class="eyebrow">אפנון במישור הזמן (FSK)</div>
+                <h2 class="slide-title">המרת ביטים לתדרים</h2>
+                <div class="cols">
+                    <div class="anim-col">
+                        <div class="anim-box">
+                            <div class="anim-label">אנימציה: FSK Time Domain</div>
+                            <canvas id="canvas-fsk"></canvas>
+                        </div>
+                    </div>
+                    <div class="content-col">
+                        <p>אי אפשר לשדר את הביטים כמו שהם. אנחנו משתמשים באפנון <span class="highlight-cyan font-bold">FSK</span> (Frequency Shift Keying).</p>
+                        <p class="muted">ממירים כל '0' לתדר נמוך ($f_0 = 2\text{Hz}$) וכל '1' לתדר גבוה ($f_1 = 5\text{Hz}$).</p>
+                        <div class="eq-box mt-4">
+                            <span class="tex">x(t) = A \cos(2\pi f_i t + \phi_0)</span>
+                        </div>
+                        <div class="panel mt-4 border-cyan">
+                            <p class="highlight-cyan font-bold">רציפות מופע (Phase Continuity):</p>
+                            <p>כדי למנוע קפיצות חדות באות שיגרמו להרחבת הסרט (תדרים גבוהים לא רצויים), אנו מקפידים על רציפות הפאזה בעת המעבר מביט לביט (CPFSK).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 3 - AWGN NOISE -->
+        <section class="slide" id="slide-3">
+            <div class="slide-inner">
+                <div class="eyebrow">הערוץ והרעש (AWGN)</div>
+                <h2 class="slide-title">הוספת רעש לערוץ התקשורת</h2>
+                <div class="cols">
+                    <div class="content-col">
+                        <p>האות שלנו יוצא לאוויר, עובר דרך אנטנות ומגברים, ופוגש <span class="highlight-orange font-bold">רעש</span>.</p>
+                        <p class="muted">במישור הזמן, קשה עד בלתי אפשרי להבחין במידע המקורי כאשר עוצמת הרעש גבוהה.</p>
+                        <div class="eq-box mt-4">
+                            <span class="tex">y(t) = x(t) + n(t)</span>
+                        </div>
+                        <p class="mt-2 text-sm muted" dir="rtl">כאשר $n(t)$ הוא מודל רעש גאוסי לבן (AWGN).</p>
+                        <div class="panel mt-4">
+                            <label class="slider-label">עוצמת רעש (Noise Level) <span id="noise-val" class="highlight-orange">0%</span></label>
+                            <input type="range" id="slider-noise" min="0" max="100" value="0" class="slider-full">
+                        </div>
+                    </div>
+                    <div class="anim-col">
+                        <div class="anim-box">
+                            <div class="anim-label">אנימציה: Time Domain + AWGN</div>
+                            <canvas id="canvas-awgn"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4 - FFT -->
+        <section class="slide" id="slide-4">
+            <div class="slide-inner">
+                <div class="eyebrow">פענוח ומישור התדר (DFT/FFT)</div>
+                <h2 class="slide-title">חשיפת המידע מתוך הרעש</h2>
+                <div class="cols">
+                    <div class="anim-col" style="flex: 1.5;">
+                        <div class="anim-box" style="aspect-ratio: 16/10;">
+                            <div class="anim-label">אנימציה: FFT Spectrum</div>
+                            <canvas id="canvas-fft"></canvas>
+                        </div>
+                    </div>
+                    <div class="content-col" style="flex: 1;">
+                        <p>כאן נכנסים הכלים שלמדנו בקורס. אנו עוברים למישור התדר בעזרת <span class="highlight-cyan font-bold">התמרת פורייה בדידה</span>.</p>
+                        <p class="muted">הרעש הלבן מתפזר באופן אחיד על פני כל הספקטרום, אבל אנרגיית האות שלנו מתרכזת בדיוק בתדרים $f_0$ ו-$f_1$.</p>
+                        <div class="eq-box mt-4 text-sm">
+                            <span class="tex">X[k] = \sum_{n=0}^{N-1} x[n] e^{-j 2\pi k n / N}</span>
+                        </div>
+                        <div class="panel mt-4 border-cyan">
+                            <p>אפילו כאשר האות הלך לאיבוד במישור הזמן, במרחב התדר מופיעים "ספייקים" ברורים. המקלט צריך רק לחפש איזה ספייק מופיע עכשיו.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 5 - RECONSTRUCTION -->
+        <section class="slide" id="slide-5">
+            <div class="slide-inner">
+                <div class="eyebrow">סינון ושחזור (LTI Systems)</div>
+                <h2 class="slide-title">מערכות LTI ופענוח התמונה</h2>
+                <div class="cols">
+                    <div class="content-col">
+                        <p>המקלט שלנו מתפקד כמערכת <span class="highlight-orange font-bold">LTI</span> (לינארית וקבועה בזמן).</p>
+                        <p class="muted">אנו מממשים שני מסנני העברת חגורה (Bandpass Filters) הממורכזים ב-$f_0$ ו-$f_1$. המסננים מנחיתים את הרעש בשאר התדרים ומוציאים החלטה איזו תדירות שודרה בכל חלון זמן.</p>
+                        <div class="eq-box mt-4">
+                            <span class="tex">|H_{BPF}(j\omega)|</span>
+                        </div>
+                        <div class="panel mt-4">
+                            <p>על ידי חישוב האנרגיה במוצא המסננים, אנו מפענחים חזרה את רצף הביטים ומשחזרים את התמונה המקורית פיקסל אחר פיקסל.</p>
+                        </div>
+                    </div>
+                    <div class="anim-col">
+                        <div class="anim-box">
+                            <div class="anim-label">אנימציה: LTI Bandpass & Reconstruction</div>
+                            <canvas id="canvas-reconstruct"></canvas>
+                        </div>
+                        <div class="controls mt-2 text-center">
+                            <button id="btn-reconstruct" class="primary-btn">התחל פענוח (Decode)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6 - FINALE DASHBOARD -->
+        <section class="slide" id="slide-6">
+            <div class="slide-inner" style="max-width: 1600px;">
+                <div class="eyebrow">The Grand Finale</div>
+                <h2 class="slide-title text-center">מערכת תקשורת בזמן אמת (Sandbox)</h2>
+                <p class="muted text-center" style="max-width: 800px; margin: 0 auto;">צפו בכל שרשרת התקשורת עובדת במקביל. מידע נארז, מאופנן ב-FSK, מורעש בערוץ, מותמר על ידי FFT, משוחזר על ידי מסננים, ומוצג חזרה.</p>
+                
+                <div class="dashboard-grid mt-6">
+                    <div class="dash-panel">
+                        <div class="dash-title">1. Transmitter (Baseband)</div>
+                        <canvas id="dash-tx" class="dash-canvas"></canvas>
+                    </div>
+                    <div class="dash-panel span-2 border-orange">
+                        <div class="dash-title">2. Channel: FSK + AWGN Time Domain</div>
+                        <canvas id="dash-time" class="dash-canvas"></canvas>
+                        <div class="mt-2 text-center" style="padding:0 1rem;">
+                            <label class="slider-label text-sm">Noise: <span id="dash-noise-val">0%</span></label>
+                            <input type="range" id="dash-slider-noise" min="0" max="100" value="0" class="slider-full">
+                        </div>
+                    </div>
+                    <div class="dash-panel span-2 border-cyan">
+                        <div class="dash-title">3. Receiver: FFT Frequency Domain</div>
+                        <canvas id="dash-fft" class="dash-canvas"></canvas>
+                    </div>
+                    <div class="dash-panel">
+                        <div class="dash-title">4. Demodulated (Output)</div>
+                        <canvas id="dash-rx" class="dash-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/simulations.js"></script>
+</body>
+</html>
