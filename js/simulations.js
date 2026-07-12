@@ -474,10 +474,14 @@ let currentNoiseLevel = 10;
     let decodedBits = new Array(64).fill(null);
     let animId = null;
     let isVisible = false;
+    let reconBitIndex = 0;
+    let lastReconTime = 0;
 
     btn.addEventListener('click', () => {
         isDecoding = true;
         decodedBits.fill(null);
+        reconBitIndex = 0;
+        lastReconTime = performance.now();
     });
 
     function draw(t) {
@@ -488,15 +492,17 @@ let currentNoiseLevel = 10;
             return;
         }
 
-        const time = t * 0.001;
-        const bIdx = Math.floor(time / bitDuration) % 64;
-
         if (isDecoding) {
-            const errorProb = currentNoiseLevel > 80 ? 0.2 : (currentNoiseLevel > 50 ? 0.05 : 0);
-            if (decodedBits[bIdx] === null) {
-                const actual = bitstream[bIdx];
-                const detected = Math.random() < errorProb ? (actual === 1 ? 0 : 1) : actual;
-                decodedBits[bIdx] = detected;
+            const delta = t - lastReconTime;
+            if (delta >= 100) { // 100ms per bit
+                lastReconTime = t;
+                if (reconBitIndex < 64) {
+                    const errorProb = currentNoiseLevel > 80 ? 0.2 : (currentNoiseLevel > 50 ? 0.05 : 0);
+                    const actual = bitstream[reconBitIndex];
+                    const detected = Math.random() < errorProb ? (actual === 1 ? 0 : 1) : actual;
+                    decodedBits[reconBitIndex] = detected;
+                    reconBitIndex++;
+                }
             }
         }
 
@@ -601,8 +607,9 @@ let currentNoiseLevel = 10;
         const tcs = Math.min(tW, tH) * 0.1;
         const tox = tW/2 - 4*tcs;
         const toy = tH/2 - 4*tcs;
-        for (let r=0; r<8; r++) {
-            for (let c=0; c<8; c++) {
+        // BUG 1 FIX: Strictly iterate < 8
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
                 tCtx.fillStyle = smiley8x8[r][c] ? '#ffc259' : '#233554';
                 tCtx.fillRect(tox+c*tcs, toy+r*tcs, tcs-1, tcs-1);
             }
@@ -612,8 +619,9 @@ let currentNoiseLevel = 10;
         const rcs = Math.min(rW, rH) * 0.1;
         const rox = rW/2 - 4*rcs;
         const roy = rH/2 - 4*rcs;
-        for (let r=0; r<8; r++) {
-            for (let c=0; c<8; c++) {
+        // BUG 1 FIX: Strictly iterate < 8
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
                 rCtx.strokeStyle = '#233554';
                 rCtx.strokeRect(rox+c*rcs, roy+r*rcs, rcs, rcs);
             }
@@ -660,7 +668,8 @@ let currentNoiseLevel = 10;
             return;
         }
 
-        if (dashBitIndex >= 64) {
+        // BUG 2 FIX: Explicitly intercept at index 64 to prevent out-of-bounds reading
+        if (dashBitIndex === 64 || dashBitIndex > 63) {
             animId = null;
             loopTimeout = setTimeout(resetAndRestartDashboard, 1500);
             return; 
@@ -681,11 +690,12 @@ let currentNoiseLevel = 10;
             const tcs = Math.min(tW, tH) * 0.1;
             const tox = tW/2 - 4*tcs;
             const toy = tH/2 - 4*tcs;
-            for (let r=0; r<8; r++) {
-                for (let c=0; c<8; c++) {
-                    const idx = r*8+c;
+            // BUG 1 FIX: Strictly iterate < 8
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const idx = r * 8 + c;
                     tCtx.fillStyle = smiley8x8[r][c] ? '#ffc259' : '#233554';
-                    if (idx === dashBitIndex) tCtx.fillStyle = '#ffc259';
+                    if (idx === dashBitIndex) tCtx.fillStyle = '#ffffff'; // Changed indicator to white for contrast
                     tCtx.fillRect(tox+c*tcs, toy+r*tcs, tcs-1, tcs-1);
                 }
             }
@@ -739,9 +749,10 @@ let currentNoiseLevel = 10;
             const rox = rW/2 - 4*rcs;
             const roy = rH/2 - 4*rcs;
             
-            for (let r=0; r<8; r++) {
-                for (let c=0; c<8; c++) {
-                    const idx = r*8+c;
+            // BUG 1 FIX: Strictly iterate < 8
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const idx = r * 8 + c;
                     rCtx.strokeStyle = '#233554';
                     rCtx.strokeRect(rox+c*rcs, roy+r*rcs, rcs, rcs);
                     

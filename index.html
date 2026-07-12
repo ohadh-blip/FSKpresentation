@@ -161,12 +161,11 @@
         <!-- SLIDE 5 - RECONSTRUCTION -->
         <section class="slide" id="slide-5">
             <div class="slide-inner">
-                <div class="eyebrow">סינון ושחזור (LTI Systems)</div>
-                <h2 class="slide-title">מערכות LTI ופענוח התמונה</h2>
+                <div class="eyebrow">סינון ושחזור</div>
+                <h2 class="slide-title">פענוח התמונה</h2>
                 <div class="cols">
                     <div class="content-col">
-                        <p>המקלט שלנו מתפקד כמערכת <span class="highlight-orange font-bold">LTI</span> (לינארית וקבועה בזמן).</p>
-                        <p class="muted">אנו מממשים שני מסנני העברת חגורה (Bandpass Filters) הממורכזים ב-<span class="math-inline">$f_0$</span> ו-<span class="math-inline">$f_1$</span>. המסננים מנחיתים את הרעש בשאר התדרים ומוציאים החלטה איזו תדירות שודרה בכל חלון זמן.</p>
+                        <p>לאחר שהבנו שבתדר אפשר לנתח את האות ולהבין מה היה האות המקורי, נרצה למצוא אותו גם בזמן. לשם כך נשתמש בשני מסנני BPF בתחומי התדרים של $f_0, f_1$. המסננים מנחיתים את הרעש בשאר התדרים ומוציאים מהי התדירות ששודרה בכל חלון זמן, וכך מחלצים את האות המקורי והביט ששודר.</p>
                         <div class="eq-box mt-4 ltr-container">
                             $$|H_{BPF}(j\omega)|$$
                         </div>
@@ -176,7 +175,7 @@
                     </div>
                     <div class="anim-col">
                         <div class="anim-box">
-                            <div class="anim-label">אנימציה: LTI Bandpass & Reconstruction</div>
+                            <div class="anim-label">אנימציה: Bandpass & Reconstruction</div>
                             <canvas id="canvas-reconstruct"></canvas>
                         </div>
                         <div class="controls mt-2 text-center">
