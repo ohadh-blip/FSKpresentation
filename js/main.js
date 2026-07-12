@@ -1,12 +1,3 @@
-/* ================= TeX auto-render ================= */
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.tex').forEach(function(el){
-        try {
-            katex.render(el.textContent, el, {throwOnError:false, strict: "ignore", displayMode:false});
-        } catch(e) {}
-    });
-});
-
 /* ================= Slide navigation ================= */
 const deck = document.getElementById('deck');
 const slides = Array.from(document.querySelectorAll('.slide'));

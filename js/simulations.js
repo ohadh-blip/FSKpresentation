@@ -171,7 +171,7 @@ let isTransmitting = false;
 
                 if (alpha > 0) {
                     ctx.globalAlpha = alpha;
-                    ctx.fillStyle = smiley8x8[r][c] ? 'var(--cyan)' : 'var(--line)';
+                    ctx.fillStyle = smiley8x8[r][c] ? '#00f0ff' : '#233554';
                     ctx.fillRect(px, py, cellSize-2, cellSize-2);
                     ctx.globalAlpha = 1.0;
                 }
@@ -179,7 +179,7 @@ let isTransmitting = false;
         }
 
         // Draw Stream Line
-        ctx.strokeStyle = 'var(--text-muted)';
+        ctx.strokeStyle = '#a8b2d1';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(w*0.3, h/2);
@@ -192,7 +192,7 @@ let isTransmitting = false;
             if (unravelProgress > 64) unravelProgress = 64;
 
             ctx.font = '20px JetBrains Mono';
-            ctx.fillStyle = 'var(--orange)';
+            ctx.fillStyle = '#ff9000';
             ctx.textAlign = 'center';
             for (let i = 0; i < Math.floor(unravelProgress); i++) {
                 const bit = bitstream[i];
@@ -220,7 +220,7 @@ let isTransmitting = false;
         ctx.clearRect(0, 0, w, h);
         
         if (!isTransmitting) {
-            ctx.fillStyle = 'var(--text-muted)';
+            ctx.fillStyle = '#a8b2d1';
             ctx.font = '16px Heebo';
             ctx.textAlign = 'center';
             ctx.fillText("לחץ 'שלח מידע' בשקופית הקודמת כדי להתחיל", w/2, h/2);
@@ -234,7 +234,7 @@ let isTransmitting = false;
         const currentFreq = currentBit === 1 ? f1 : f0;
 
         // Top: Bitstream indicator
-        ctx.fillStyle = 'var(--text)';
+        ctx.fillStyle = '#f8faff';
         ctx.font = '24px JetBrains Mono';
         ctx.textAlign = 'center';
         
@@ -243,14 +243,14 @@ let isTransmitting = false;
             if (idx >= 0 && idx < 64) {
                 const px = w/2 + (i * 60) - ((time % bitDuration)/bitDuration * 60);
                 ctx.globalAlpha = 1 - (Math.abs(px - w/2) / (w/2));
-                ctx.fillStyle = idx === currentBitFrame ? 'var(--orange)' : 'var(--text-muted)';
+                ctx.fillStyle = idx === currentBitFrame ? '#ff9000' : '#a8b2d1';
                 ctx.fillText(bitstream[idx].toString(), px, h*0.2);
             }
         }
         ctx.globalAlpha = 1.0;
         
         // Highlighter for active bit
-        ctx.strokeStyle = 'var(--orange)';
+        ctx.strokeStyle = '#ff9000';
         ctx.strokeRect(w/2 - 15, h*0.2 - 25, 30, 35);
 
         // Bottom: FSK Wave
@@ -258,7 +258,7 @@ let isTransmitting = false;
         const waveAmp = h * 0.2;
         
         ctx.beginPath();
-        ctx.strokeStyle = 'var(--cyan)';
+        ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 3;
 
         // Draw last 2 seconds of history
@@ -326,7 +326,7 @@ let currentNoiseLevel = 0;
         const waveAmp = h * 0.3;
         
         ctx.beginPath();
-        ctx.strokeStyle = 'var(--orange)';
+        ctx.strokeStyle = '#ff9000';
         ctx.lineWidth = 2;
 
         const historySeconds = 1.0; // Show less history for noise details
@@ -400,7 +400,7 @@ let currentNoiseLevel = 0;
         const baseY = h * 0.8;
 
         // Draw axes
-        ctx.strokeStyle = 'var(--line)';
+        ctx.strokeStyle = '#233554';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(startX, baseY);
@@ -415,21 +415,21 @@ let currentNoiseLevel = 0;
             const px = startX + k * barWidth;
             
             // Color based on f0 or f1
-            ctx.fillStyle = 'var(--text-muted)';
+            ctx.fillStyle = '#a8b2d1';
             if (k === f0) ctx.fillStyle = 'rgba(0, 240, 255, 0.8)';
             if (k === f1) ctx.fillStyle = 'rgba(255, 144, 0, 0.8)';
 
             ctx.fillRect(px + 4, baseY - barH, barWidth - 8, barH);
             
             // label
-            ctx.fillStyle = 'var(--text)';
+            ctx.fillStyle = '#f8faff';
             ctx.font = '14px JetBrains Mono';
             ctx.textAlign = 'center';
             ctx.fillText(k + 'Hz', px + barWidth/2, baseY + 20);
         }
 
         // Active indicator
-        ctx.fillStyle = 'var(--text)';
+        ctx.fillStyle = '#f8faff';
         ctx.font = '20px Heebo';
         ctx.fillText(`Bit נוכחי מקורי: ${bitstream[bIdx]}`, w/2, h*0.2);
 
@@ -490,32 +490,32 @@ let currentNoiseLevel = 0;
                 const px = gridX + c * cellSize;
                 const py = gridY + r * cellSize;
                 
-                ctx.strokeStyle = 'var(--line)';
+                ctx.strokeStyle = '#233554';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(px, py, cellSize, cellSize);
 
                 if (decodedBits[idx] !== null) {
                     // Check for error
                     const isError = decodedBits[idx] !== bitstream[idx];
-                    ctx.fillStyle = decodedBits[idx] === 1 ? (isError ? 'red' : 'var(--cyan)') : 'transparent';
+                    ctx.fillStyle = decodedBits[idx] === 1 ? (isError ? '#ff4d60' : '#00f0ff') : 'transparent';
                     if (decodedBits[idx] === 1) {
                         ctx.fillRect(px+1, py+1, cellSize-2, cellSize-2);
                     } else if (isError) {
                         // it was 1 but decoded as 0
-                        ctx.fillStyle = 'red';
+                        ctx.fillStyle = '#ff4d60';
                         ctx.fillRect(px+1, py+1, cellSize-2, cellSize-2);
                     }
                 }
             }
         }
 
-        ctx.fillStyle = 'var(--text)';
+        ctx.fillStyle = '#f8faff';
         ctx.font = '20px Heebo';
         ctx.textAlign = 'center';
         if (isDecoding) {
             ctx.fillText("סמיילי משוחזר", w/2, h*0.1);
             if(currentNoiseLevel > 50) {
-                 ctx.fillStyle = 'red';
+                 ctx.fillStyle = '#ff4d60';
                  ctx.font = '16px Heebo';
                  ctx.fillText("עוצמת רעש גבוהה גורמת לשגיאות ביטים (BER > 0)", w/2, h*0.9);
             }
@@ -582,8 +582,8 @@ let currentNoiseLevel = 0;
         for (let r=0; r<8; r++) {
             for (let c=0; c<8; c++) {
                 const idx = r*8+c;
-                tCtx.fillStyle = smiley8x8[r][c] ? 'var(--cyan)' : 'var(--line)';
-                if (idx === bIdx) tCtx.fillStyle = 'var(--orange)'; // highlight active
+                tCtx.fillStyle = smiley8x8[r][c] ? '#00f0ff' : '#233554';
+                if (idx === bIdx) tCtx.fillStyle = '#ff9000'; // highlight active
                 tCtx.fillRect(ox+c*cs, oy+r*cs, cs-1, cs-1);
             }
         }
@@ -591,7 +591,7 @@ let currentNoiseLevel = 0;
         // 2. Time Domain
         tmCtx.clearRect(0,0,tmW,tmH);
         tmCtx.beginPath();
-        tmCtx.strokeStyle = 'var(--cyan)';
+        tmCtx.strokeStyle = '#00f0ff';
         tmCtx.lineWidth = 2;
         const hist = 1.5;
         const wY = tmH/2;
@@ -629,17 +629,17 @@ let currentNoiseLevel = 0;
         const sx = fW*0.1;
         const by = fH*0.85;
         
-        fCtx.fillStyle = 'var(--line)';
+        fCtx.fillStyle = '#233554';
         fCtx.fillRect(sx, by, fW*0.8, 2);
         
         for (let k=0; k<10; k++) {
             const mag = mags[k]||0;
             const bh = mag*(fH*1.8);
-            fCtx.fillStyle = 'var(--text-muted)';
-            if(k===f0) fCtx.fillStyle = 'var(--cyan)';
-            if(k===f1) fCtx.fillStyle = 'var(--orange)';
+            fCtx.fillStyle = '#a8b2d1';
+            if(k===f0) fCtx.fillStyle = '#00f0ff';
+            if(k===f1) fCtx.fillStyle = '#ff9000';
             fCtx.fillRect(sx+k*bw+2, by-bh, bw-4, bh);
-            fCtx.fillStyle = 'var(--text)';
+            fCtx.fillStyle = '#f8faff';
             fCtx.font = '10px monospace';
             fCtx.fillText(k, sx+k*bw+bw/2 - 3, by+15);
         }
@@ -661,11 +661,11 @@ let currentNoiseLevel = 0;
         for (let r=0; r<8; r++) {
             for (let c=0; c<8; c++) {
                 const idx = r*8+c;
-                rCtx.strokeStyle = 'var(--line)';
+                rCtx.strokeStyle = '#233554';
                 rCtx.strokeRect(rox+c*rcs, roy+r*rcs, rcs, rcs);
                 if(rxBits[idx] !== null) {
                     const isErr = rxBits[idx] !== bitstream[idx];
-                    rCtx.fillStyle = rxBits[idx] === 1 ? (isErr ? '#ff4d60' : 'var(--cyan)') : 'transparent';
+                    rCtx.fillStyle = rxBits[idx] === 1 ? (isErr ? '#ff4d60' : '#00f0ff') : 'transparent';
                     if(rxBits[idx]===1) rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2);
                     else if(isErr) { rCtx.fillStyle='#ff4d60'; rCtx.fillRect(rox+c*rcs+1, roy+r*rcs+1, rcs-2, rcs-2); }
                 }

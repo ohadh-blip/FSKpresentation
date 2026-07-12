@@ -42,7 +42,7 @@
                 <h1 class="slide-title">שימוש בהתמרת פורייה למערכות תקשורת:<br><span class="highlight-cyan">קידוד ופענוח אותות FSK</span></h1>
                 <p class="slide-subtitle mt-4">מעבר ממישור הזמן למישור התדר בתקשורת ספרתית</p>
                 <div class="mt-8">
-                    <p class="presenter-name">מגיש: תלמיד הקורס</p>
+                    <p class="presenter-name">מגישים: אוהד חפץ ועומר בהרל</p>
                 </div>
                 <div class="anim-box mt-6" style="height: 250px;">
                     <canvas id="canvas-title"></canvas>
@@ -92,8 +92,8 @@
                     <div class="content-col">
                         <p>אי אפשר לשדר את הביטים כמו שהם. אנחנו משתמשים באפנון <span class="highlight-cyan font-bold">FSK</span> (Frequency Shift Keying).</p>
                         <p class="muted">ממירים כל '0' לתדר נמוך ($f_0 = 2\text{Hz}$) וכל '1' לתדר גבוה ($f_1 = 5\text{Hz}$).</p>
-                        <div class="eq-box mt-4">
-                            <span class="tex">x(t) = A \cos(2\pi f_i t + \phi_0)</span>
+                        <div class="eq-box mt-4 ltr-container">
+                            $$x(t) = A \cos(2\pi f_i t + \phi_0)$$
                         </div>
                         <div class="panel mt-4 border-cyan">
                             <p class="highlight-cyan font-bold">רציפות מופע (Phase Continuity):</p>
@@ -113,8 +113,8 @@
                     <div class="content-col">
                         <p>האות שלנו יוצא לאוויר, עובר דרך אנטנות ומגברים, ופוגש <span class="highlight-orange font-bold">רעש</span>.</p>
                         <p class="muted">במישור הזמן, קשה עד בלתי אפשרי להבחין במידע המקורי כאשר עוצמת הרעש גבוהה.</p>
-                        <div class="eq-box mt-4">
-                            <span class="tex">y(t) = x(t) + n(t)</span>
+                        <div class="eq-box mt-4 ltr-container">
+                            $$y(t) = x(t) + n(t)$$
                         </div>
                         <p class="mt-2 text-sm muted" dir="rtl">כאשר $n(t)$ הוא מודל רעש גאוסי לבן (AWGN).</p>
                         <div class="panel mt-4">
@@ -147,8 +147,8 @@
                     <div class="content-col" style="flex: 1;">
                         <p>כאן נכנסים הכלים שלמדנו בקורס. אנו עוברים למישור התדר בעזרת <span class="highlight-cyan font-bold">התמרת פורייה בדידה</span>.</p>
                         <p class="muted">הרעש הלבן מתפזר באופן אחיד על פני כל הספקטרום, אבל אנרגיית האות שלנו מתרכזת בדיוק בתדרים $f_0$ ו-$f_1$.</p>
-                        <div class="eq-box mt-4 text-sm">
-                            <span class="tex">X[k] = \sum_{n=0}^{N-1} x[n] e^{-j 2\pi k n / N}</span>
+                        <div class="eq-box mt-4 text-sm ltr-container">
+                            $$X[k] = \sum_{n=0}^{N-1} x[n] e^{-j 2\pi k n / N}$$
                         </div>
                         <div class="panel mt-4 border-cyan">
                             <p>אפילו כאשר האות הלך לאיבוד במישור הזמן, במרחב התדר מופיעים "ספייקים" ברורים. המקלט צריך רק לחפש איזה ספייק מופיע עכשיו.</p>
@@ -167,8 +167,8 @@
                     <div class="content-col">
                         <p>המקלט שלנו מתפקד כמערכת <span class="highlight-orange font-bold">LTI</span> (לינארית וקבועה בזמן).</p>
                         <p class="muted">אנו מממשים שני מסנני העברת חגורה (Bandpass Filters) הממורכזים ב-$f_0$ ו-$f_1$. המסננים מנחיתים את הרעש בשאר התדרים ומוציאים החלטה איזו תדירות שודרה בכל חלון זמן.</p>
-                        <div class="eq-box mt-4">
-                            <span class="tex">|H_{BPF}(j\omega)|</span>
+                        <div class="eq-box mt-4 ltr-container">
+                            $$|H_{BPF}(j\omega)|$$
                         </div>
                         <div class="panel mt-4">
                             <p>על ידי חישוב האנרגיה במוצא המסננים, אנו מפענחים חזרה את רצף הביטים ומשחזרים את התמונה המקורית פיקסל אחר פיקסל.</p>
@@ -223,5 +223,20 @@
 
     <script src="js/main.js"></script>
     <script src="js/simulations.js"></script>
+    
+    <!-- KaTeX Auto-render -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          renderMathInElement(document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError : false
+          });
+      });
+    </script>
 </body>
 </html>
