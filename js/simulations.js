@@ -628,17 +628,20 @@ let currentNoiseLevel = 10;
         }
         
         // FFT Bins
-        const bw = fW * 0.2;
-        const bx0 = fW * 0.25 - bw/2;
-        const bx1 = fW * 0.75 - bw/2;
+        const maxFreqToShow = 10;
+        const barWidth = (fW * 0.8) / maxFreqToShow;
+        const startX = fW * 0.1;
         const by = fH * 0.8;
         fCtx.fillStyle = '#233554';
-        fCtx.fillRect(fW*0.1, by, fW*0.8, 2);
+        fCtx.fillRect(startX, by, fW*0.8, 2);
+        
         fCtx.fillStyle = '#f8faff';
         fCtx.font = '14px JetBrains Mono';
         fCtx.textAlign = 'center';
-        fCtx.fillText('f0 (2Hz)', bx0 + bw/2, by + 20);
-        fCtx.fillText('f1 (5Hz)', bx1 + bw/2, by + 20);
+        for (let k = 0; k < maxFreqToShow; k++) {
+            const px = startX + k * barWidth;
+            fCtx.fillText(k + 'Hz', px + barWidth/2, by + 20);
+        }
     }
     setTimeout(drawEmpty, 100);
 
@@ -718,30 +721,28 @@ let currentNoiseLevel = 10;
 
             // 3. FFT
             fCtx.clearRect(0,0,fW,fH);
-            const bw = fW * 0.2;
-            const bx0 = fW * 0.25 - bw/2;
-            const bx1 = fW * 0.75 - bw/2;
+            const maxFreqToShow = 10;
+            const barWidth = (fW * 0.8) / maxFreqToShow;
+            const startX = fW * 0.1;
             const by = fH * 0.8;
             fCtx.fillStyle = '#233554';
-            fCtx.fillRect(fW*0.1, by, fW*0.8, 2);
-            
-            let mag0 = (currentNoiseLevel/100) * 0.2 * Math.abs(randn_bm());
-            if (bFreq === f0) mag0 += 1.0;
-            const bh0 = mag0 * (fH * 0.5);
-            fCtx.fillStyle = (bFreq === f0) ? '#ffc259' : '#a8b2d1';
-            fCtx.fillRect(bx0, by - bh0, bw, bh0);
-            
-            let mag1 = (currentNoiseLevel/100) * 0.2 * Math.abs(randn_bm());
-            if (bFreq === f1) mag1 += 1.0;
-            const bh1 = mag1 * (fH * 0.5);
-            fCtx.fillStyle = (bFreq === f1) ? '#ffc259' : '#a8b2d1';
-            fCtx.fillRect(bx1, by - bh1, bw, bh1);
+            fCtx.fillRect(startX, by, fW*0.8, 2);
 
-            fCtx.fillStyle = '#f8faff';
-            fCtx.font = '14px JetBrains Mono';
-            fCtx.textAlign = 'center';
-            fCtx.fillText('f0 (2Hz)', bx0 + bw/2, by + 20);
-            fCtx.fillText('f1 (5Hz)', bx1 + bw/2, by + 20);
+            for (let k = 0; k < maxFreqToShow; k++) {
+                let mag = (currentNoiseLevel/100) * 0.2 * Math.abs(randn_bm());
+                if (bFreq === k) mag += 1.0;
+                
+                const barH = mag * (fH * 0.5);
+                const px = startX + k * barWidth;
+                
+                fCtx.fillStyle = (bFreq === k) ? '#ffc259' : '#a8b2d1';
+                fCtx.fillRect(px + 4, by - barH, barWidth - 8, barH);
+                
+                fCtx.fillStyle = '#f8faff';
+                fCtx.font = '14px JetBrains Mono';
+                fCtx.textAlign = 'center';
+                fCtx.fillText(k + 'Hz', px + barWidth/2, by + 20);
+            }
 
             // 4. RX Grid
             rCtx.clearRect(0,0,rW,rH);
