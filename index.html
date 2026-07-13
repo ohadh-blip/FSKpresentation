@@ -57,15 +57,18 @@
         <!-- SLIDE 1 - BASEBAND -->
         <section class="slide" id="slide-1">
             <div class="slide-inner">
-                <div class="eyebrow">האתגר והמידע (The Baseband)</div>
-                <h2 class="slide-title">המידע הדיגיטלי כרצף ביטים</h2>
+                <div class="eyebrow">האתגר והמידע (THE BASEBAND)</div>
+                <h2 class="slide-title">המידע הדיגיטלי והאתגר הפיזיקלי</h2>
                 <div class="cols">
                     <div class="content-col">
                         <p>אנחנו רוצים לשדר תמונה (למשל סמיילי קטן של 8x8 פיקסלים) מאליס לבוב.</p>
-                        <p class="muted">המידע הדיגיטלי שלנו (Baseband) הוא רק אוסף של אפסים ואחדות. כדי לשדר אותו באוויר או בכבל, נצטרך להרכיב אותו על "גל נושא" (Carrier).</p>
-                        <div class="panel mt-4">
-                            <p class="highlight-orange font-bold">מידע דיגיטלי:</p>
-                            <p>כל פיקסל דלוק הוא '1' וכל פיקסל כבוי הוא '0'. התמונה הופכת לזרם טורי של ביטים שמועבר אחד אחרי השני.</p>
+                        <p class="muted">המידע הדיגיטלי שלנו (Baseband) הופך לזרם טורי של ביטים - כל פיקסל דלוק הוא '1' וכבוי הוא '0'.</p>
+                        <div class="panel mt-4 border-orange">
+                            <p class="highlight-orange font-bold">למה אי אפשר לשדר את הביטים כמו שהם?</p>
+                            <ul style="margin-top: 0.5rem; padding-right: 1.5rem; color: #ccd6f6; font-size: 0.95em;">
+                                <li style="margin-bottom: 0.5rem;"><strong>רכיב מתח ישר (DC):</strong> ביטים הם פולסים מרובעים המכילים המון אנרגיה בתדרים נמוכים, שהתווך האלחוטי פשוט לא מסוגל להעביר.</li>
+                                <li><strong>מגבלת האנטנה:</strong> בפיזיקה, אורך אנטנה אופטימלי נגזר מאורך הגל ($L \approx \lambda/2$). שידור בתדרים האפסיים של המידע עצמו ידרוש אנטנות באורך קילומטרים.</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="anim-col">
@@ -84,8 +87,8 @@
         <!-- SLIDE 2 - FSK MODULATION -->
         <section class="slide" id="slide-2">
             <div class="slide-inner">
-                <div class="eyebrow">אפנון במישור הזמן (FSK)</div>
-                <h2 class="slide-title">המרת ביטים לתדרים</h2>
+                <div class="eyebrow">הפתרון: אפנון במישור הזמן (FSK)</div>
+                <h2 class="slide-title">המרת ביטים לשינויי תדר</h2>
                 <div class="cols">
                     <div class="anim-col">
                         <div class="anim-box">
@@ -94,8 +97,8 @@
                         </div>
                     </div>
                     <div class="content-col">
-                        <p>אי אפשר לשדר את הביטים כמו שהם. אנחנו משתמשים באפנון <span class="highlight-cyan font-bold">FSK</span> (Frequency Shift Keying).</p>
-                        <p class="muted">ממירים כל '0' לתדר נמוך (<span class="math-inline">$f_0 = 2\text{Hz}$</span>) וכל '1' לתדר גבוה (<span class="math-inline">$f_1 = 5\text{Hz}$</span>).</p>
+                        <p>כדי להתגבר על מגבלות הפיזיקה, אנחנו חייבים להרכיב את המידע על "גל נושא" בתדר גבוה. כאן נכנס אפנון <span class="highlight-cyan font-bold">FSK</span> (Frequency Shift Keying).</p>
+                        <p class="muted">אנחנו מקודדים את הביטים אל תוך התדר של הגל: ממירים כל '0' לתדר נמוך (<span class="math-inline">$f_0 = 2\text{Hz}$</span>) וכל '1' לתדר גבוה (<span class="math-inline">$f_1 = 5\text{Hz}$</span>).</p>
                         <div class="eq-box mt-4 ltr-container">
                             $$x(t) = A \cos(2\pi f_i t + \phi_0)$$
                         </div>
